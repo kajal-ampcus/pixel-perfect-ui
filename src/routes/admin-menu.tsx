@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil } from "lucide-react";
+import { useState } from "react";
+import { Plus, Pencil, X, UploadCloud, Utensils, Cookie, Trash2, Settings2 } from "lucide-react";
 import { AdminLayout } from "./admin-orders";
 
 export const Route = createFileRoute("/admin-menu")({ component: AdminMenu });
 
 function AdminMenu() {
+  const [showAdd, setShowAdd] = useState(false);
+
   const items = [
     { name: "Classic Margherita", price: "$14.50", desc: "Italian classic with San Marzano tomatoes, buffalo mozzarella, and fresh basil leaves on sourdough.", tag: "CHEF SPECIAL", tagColor: "bg-primary text-primary-foreground", img: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400", live: true },
     { name: "Bacon Beef Burger", price: "$18.75", desc: "Double Angus beef patty, smoked bacon, jalapeños, and our secret chipotle mayo sauce.", tag: "SPICY", tagColor: "bg-destructive text-destructive-foreground", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400", live: true },
@@ -21,7 +24,7 @@ function AdminMenu() {
           <h1 className="text-2xl font-bold">Menu & Items Management</h1>
           <p className="text-xs text-muted-foreground">Configure and manage your daily canteen menu offerings.</p>
         </div>
-        <button className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"><Plus className="h-3 w-3" /> Add New Item</button>
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"><Plus className="h-3 w-3" /> Add New Item</button>
       </div>
 
       <div className="mb-4 flex items-center justify-between">
@@ -59,12 +62,102 @@ function AdminMenu() {
           </div>
         ))}
 
-        <button className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card/40 p-6 text-center">
+        <button onClick={() => setShowAdd(true)} className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card/40 p-6 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary"><Plus className="h-5 w-5" /></div>
           <div className="text-sm font-semibold">Create New Menu Item</div>
           <div className="text-[10px] text-muted-foreground">Add ingredients, set prices, and go live.</div>
         </button>
       </div>
+
+      {showAdd && <AddItemModal onClose={() => setShowAdd(false)} />}
     </AdminLayout>
   );
+}
+
+function AddItemModal({ onClose }: { onClose: () => void }) {
+  const [components, setComponents] = useState([
+    { icon: Utensils, name: "Basmati Rice", portion: "150g", qty: 1 },
+    { icon: Cookie, name: "Dal Tadka", portion: "100ml", qty: 1 },
+  ]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4">
+      <div className="relative w-full max-w-2xl rounded-xl border border-border bg-card p-6">
+        <button onClick={onClose} className="absolute right-3 top-3 text-muted-foreground"><X className="h-4 w-4" /></button>
+        <div className="mb-4">
+          <div className="text-lg font-bold">Add New Item</div>
+          <div className="text-xs text-muted-foreground">Create a new entry for your canteen menu</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Item Name">
+            <input placeholder="e.g. Premium Veg Thali" className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none" />
+          </Field>
+          <Field label="Category">
+            <select className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none">
+              <option>Lunch Combos</option><option>Beverages</option><option>Desserts</option>
+            </select>
+          </Field>
+          <Field label="Price ($)">
+            <input placeholder="$ 0.00" className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none" />
+          </Field>
+          <Field label="Display Tag">
+            <div className="flex gap-2 pt-1.5">
+              <span className="rounded-full border border-info/40 bg-info/10 px-2 py-0.5 text-[10px] text-info">⚡ Popular</span>
+              <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] text-success">🌱 Vegetarian</span>
+            </div>
+          </Field>
+          <Field label="Description">
+            <textarea placeholder="Describe the ingredients and preparation..." rows={4} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none" />
+          </Field>
+          <Field label="Item Image">
+            <div className="flex h-[104px] flex-col items-center justify-center rounded-md border-2 border-dashed border-border bg-input/20 text-center">
+              <UploadCloud className="mb-1 h-5 w-5 text-primary" />
+              <div className="text-xs text-primary">Click to upload or drag and drop</div>
+              <div className="text-[10px] text-muted-foreground">PNG, JPG up to 5MB</div>
+            </div>
+          </Field>
+        </div>
+
+        <div className="mt-4 rounded-md border border-border bg-muted/20 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold"><Settings2 className="h-4 w-4 text-primary" /> Combo Components</div>
+            <button className="flex items-center gap-1 rounded-md border border-primary/40 px-2 py-1 text-[10px] font-semibold text-primary"><Plus className="h-3 w-3" /> Add Component</button>
+          </div>
+          <div className="space-y-2">
+            {components.map((c, i) => (
+              <div key={i} className="flex items-center justify-between rounded-md border border-border bg-card p-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/20 text-primary"><c.icon className="h-3 w-3" /></div>
+                  <div>
+                    <div className="text-xs font-semibold">{c.name}</div>
+                    <div className="text-[10px] text-muted-foreground">Portion: {c.portion}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 rounded border border-border px-2 py-0.5 text-xs">
+                    <span>—</span><span className="px-1">{c.qty}</span><span>+</span>
+                  </div>
+                  <button onClick={() => setComponents(components.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                </div>
+              </div>
+            ))}
+            <div className="flex gap-2 pt-1">
+              <input placeholder="Search for existing items to add..." className="flex-1 rounded-md border border-border bg-input/40 px-3 py-1.5 text-xs outline-none" />
+              <button className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-md px-4 py-2 text-xs text-muted-foreground">Cancel</button>
+          <button className="flex items-center gap-1 rounded-md bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground">✓ Create Item</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><div className="mb-1 text-[11px] font-semibold text-muted-foreground">{label}</div>{children}</div>;
 }

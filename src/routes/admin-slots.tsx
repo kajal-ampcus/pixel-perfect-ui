@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Clock, Plus, Pencil } from "lucide-react";
+import { useState } from "react";
+import { Clock, Plus, Pencil, X, Utensils, Coffee, Sparkles } from "lucide-react";
 import { AdminLayout } from "./admin-orders";
 
 export const Route = createFileRoute("/admin-slots")({ component: AdminSlots });
 
 function AdminSlots() {
+  const [showAdd, setShowAdd] = useState(false);
+  const [slotType, setSlotType] = useState<"Meal" | "Tea Break">("Meal");
+  const [active, setActive] = useState(true);
+
   const slots = [
     { label: "MORNING SESSION", name: "Breakfast", time: "07:00 — 09:00", occ: "40/40", pct: 100, status: "CLOSED", statusColor: "bg-destructive text-destructive-foreground", barColor: "bg-destructive", extra: "+18" },
     { label: "PEAK SESSION", name: "Lunch", time: "12:00 — 14:00", occ: "124/150", pct: 83, status: "● ACTIVE", statusColor: "bg-primary text-primary-foreground", barColor: "bg-primary", extra: "+102" },
@@ -62,16 +67,65 @@ function AdminSlots() {
           </div>
         ))}
 
-        <button className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card/40 p-6 text-center">
+        <button onClick={() => setShowAdd(true)} className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card/40 p-6 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-primary"><Plus className="h-5 w-5" /></div>
           <div className="text-sm font-semibold">Add New Slot</div>
           <div className="text-[10px] text-muted-foreground">Define a new operational window</div>
         </button>
       </div>
 
-      <button className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+      <button onClick={() => setShowAdd(true)} className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
         <Plus className="h-5 w-5" />
       </button>
+
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4">
+          <div className="relative w-full max-w-md rounded-xl border border-border bg-card p-6">
+            <button onClick={() => setShowAdd(false)} className="absolute right-3 top-3 text-muted-foreground"><X className="h-4 w-4" /></button>
+            <div className="mb-4">
+              <div className="text-lg font-bold">Add New Slot</div>
+              <div className="text-xs text-muted-foreground">Configure a new dining window</div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground">SLOT NAME</div>
+                <input placeholder="e.g., Early Breakfast" className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none" />
+              </div>
+              <div>
+                <div className="mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground">SLOT TYPE</div>
+                <div className="flex gap-1 rounded-md border border-border p-1">
+                  <button onClick={() => setSlotType("Meal")} className={`flex flex-1 items-center justify-center gap-1.5 rounded py-1.5 text-xs font-semibold ${slotType === "Meal" ? "bg-muted text-foreground" : "text-muted-foreground"}`}>
+                    <Utensils className="h-3 w-3" /> Meal
+                  </button>
+                  <button onClick={() => setSlotType("Tea Break")} className={`flex flex-1 items-center justify-center gap-1.5 rounded py-1.5 text-xs font-semibold ${slotType === "Tea Break" ? "bg-muted text-foreground" : "text-muted-foreground"}`}>
+                    <Coffee className="h-3 w-3" /> Tea Break
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div className="mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground">END TIME</div>
+                <input type="time" placeholder="--:-- --" className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none" />
+              </div>
+              <div className="flex items-center justify-between rounded-md border border-border bg-primary/5 p-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/20 text-primary"><Sparkles className="h-3 w-3" /></div>
+                  <div>
+                    <div className="text-xs font-semibold">Active Immediately</div>
+                    <div className="text-[10px] text-muted-foreground">Make this slot available to users right away.</div>
+                  </div>
+                </div>
+                <button onClick={() => setActive(!active)} className={`flex h-5 w-9 items-center rounded-full p-0.5 ${active ? "bg-primary" : "bg-muted"}`}>
+                  <div className={`h-4 w-4 rounded-full bg-white transition-transform ${active ? "translate-x-4" : ""}`} />
+                </button>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setShowAdd(false)} className="rounded-md px-4 py-2 text-xs text-muted-foreground">Cancel</button>
+              <button className="rounded-md bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground">Create Slot</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
