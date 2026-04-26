@@ -14,8 +14,13 @@ import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as KitchenNotificationsRouteImport } from './routes/kitchen-notifications'
+import { Route as KitchenHistoryRouteImport } from './routes/kitchen-history'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminSlotsRouteImport } from './routes/admin-slots'
+import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
+import { Route as AdminMenuRouteImport } from './routes/admin-menu'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -44,6 +49,16 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KitchenNotificationsRoute = KitchenNotificationsRouteImport.update({
+  id: '/kitchen-notifications',
+  path: '/kitchen-notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KitchenHistoryRoute = KitchenHistoryRouteImport.update({
+  id: '/kitchen-history',
+  path: '/kitchen-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KitchenRoute = KitchenRouteImport.update({
   id: '/kitchen',
   path: '/kitchen',
@@ -52,6 +67,21 @@ const KitchenRoute = KitchenRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSlotsRoute = AdminSlotsRouteImport.update({
+  id: '/admin-slots',
+  path: '/admin-slots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/admin-orders',
+  path: '/admin-orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMenuRoute = AdminMenuRouteImport.update({
+  id: '/admin-menu',
+  path: '/admin-menu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -68,8 +98,13 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-menu': typeof AdminMenuRoute
+  '/admin-orders': typeof AdminOrdersRoute
+  '/admin-slots': typeof AdminSlotsRoute
   '/dashboard': typeof DashboardRoute
   '/kitchen': typeof KitchenRoute
+  '/kitchen-history': typeof KitchenHistoryRoute
+  '/kitchen-notifications': typeof KitchenNotificationsRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
@@ -79,8 +114,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-menu': typeof AdminMenuRoute
+  '/admin-orders': typeof AdminOrdersRoute
+  '/admin-slots': typeof AdminSlotsRoute
   '/dashboard': typeof DashboardRoute
   '/kitchen': typeof KitchenRoute
+  '/kitchen-history': typeof KitchenHistoryRoute
+  '/kitchen-notifications': typeof KitchenNotificationsRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
@@ -91,8 +131,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin-menu': typeof AdminMenuRoute
+  '/admin-orders': typeof AdminOrdersRoute
+  '/admin-slots': typeof AdminSlotsRoute
   '/dashboard': typeof DashboardRoute
   '/kitchen': typeof KitchenRoute
+  '/kitchen-history': typeof KitchenHistoryRoute
+  '/kitchen-notifications': typeof KitchenNotificationsRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
@@ -104,8 +149,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/admin-menu'
+    | '/admin-orders'
+    | '/admin-slots'
     | '/dashboard'
     | '/kitchen'
+    | '/kitchen-history'
+    | '/kitchen-notifications'
     | '/login'
     | '/menu'
     | '/notifications'
@@ -115,8 +165,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/admin-menu'
+    | '/admin-orders'
+    | '/admin-slots'
     | '/dashboard'
     | '/kitchen'
+    | '/kitchen-history'
+    | '/kitchen-notifications'
     | '/login'
     | '/menu'
     | '/notifications'
@@ -126,8 +181,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin-menu'
+    | '/admin-orders'
+    | '/admin-slots'
     | '/dashboard'
     | '/kitchen'
+    | '/kitchen-history'
+    | '/kitchen-notifications'
     | '/login'
     | '/menu'
     | '/notifications'
@@ -138,8 +198,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AdminMenuRoute: typeof AdminMenuRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminSlotsRoute: typeof AdminSlotsRoute
   DashboardRoute: typeof DashboardRoute
   KitchenRoute: typeof KitchenRoute
+  KitchenHistoryRoute: typeof KitchenHistoryRoute
+  KitchenNotificationsRoute: typeof KitchenNotificationsRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -184,6 +249,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kitchen-notifications': {
+      id: '/kitchen-notifications'
+      path: '/kitchen-notifications'
+      fullPath: '/kitchen-notifications'
+      preLoaderRoute: typeof KitchenNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kitchen-history': {
+      id: '/kitchen-history'
+      path: '/kitchen-history'
+      fullPath: '/kitchen-history'
+      preLoaderRoute: typeof KitchenHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/kitchen': {
       id: '/kitchen'
       path: '/kitchen'
@@ -196,6 +275,27 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-slots': {
+      id: '/admin-slots'
+      path: '/admin-slots'
+      fullPath: '/admin-slots'
+      preLoaderRoute: typeof AdminSlotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-orders': {
+      id: '/admin-orders'
+      path: '/admin-orders'
+      fullPath: '/admin-orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-menu': {
+      id: '/admin-menu'
+      path: '/admin-menu'
+      fullPath: '/admin-menu'
+      preLoaderRoute: typeof AdminMenuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -218,8 +318,13 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AdminMenuRoute: AdminMenuRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminSlotsRoute: AdminSlotsRoute,
   DashboardRoute: DashboardRoute,
   KitchenRoute: KitchenRoute,
+  KitchenHistoryRoute: KitchenHistoryRoute,
+  KitchenNotificationsRoute: KitchenNotificationsRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   NotificationsRoute: NotificationsRoute,
