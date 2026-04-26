@@ -1,28 +1,32 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard, ClipboardList, Clock, Users, Wallet, BarChart3, Bell,
   ChefHat, Search, Download, LogOut, HelpCircle, Check, X, ShoppingBag, FileText,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { logout, getCurrentUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin-orders")({ component: AdminOrders });
 
 export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: string }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const user = typeof window !== "undefined" ? getCurrentUser() : null;
   const sections = [
     { label: "OVERVIEW", items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard }, { to: "/admin-orders", label: "Live Orders", icon: ShoppingBag }] },
     { label: "MANAGEMENT", items: [{ to: "/admin-menu", label: "Menu & Items", icon: ClipboardList }, { to: "/admin-slots", label: "Time Slots", icon: Clock }, { to: "/admin-users", label: "Kitchen Users", icon: Users }] },
     { label: "FINANCE", items: [{ to: "/admin-billing", label: "Monthly Billing", icon: Wallet }, { to: "/admin-reports", label: "Reports", icon: BarChart3 }] },
     { label: "SYSTEM", items: [{ to: "/admin-notifications", label: "Notifications", icon: Bell }] },
   ];
+  const handleLogout = () => { logout(); navigate({ to: "/login" }); };
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar p-4 md:flex">
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-primary/15 p-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><ChefHat className="h-4 w-4" /></div>
           <div>
-            <div className="text-sm font-bold text-primary leading-tight">Admin Console</div>
-            <div className="text-[9px] tracking-widest text-muted-foreground">CENTRAL HUB</div>
+            <div className="text-sm font-bold text-primary leading-tight">Admin Portal</div>
+            <div className="text-[9px] tracking-widest text-muted-foreground">SYSTEM MANAGEMENT</div>
           </div>
         </div>
         {sections.map((s) => (
@@ -38,9 +42,9 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
             })}
           </div>
         ))}
-        <div className="mt-auto space-y-1">
-          <Link to="/login" className="flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground"><HelpCircle className="h-4 w-4" /> Support</Link>
-          <Link to="/login" className="flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground"><LogOut className="h-4 w-4" /> Logout</Link>
+        <div className="mt-auto space-y-1 border-t border-border/50 pt-3">
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-active/60 rounded-md"><HelpCircle className="h-4 w-4" /> Help Center</button>
+          <button onClick={handleLogout} className="flex w-full items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-active/60 rounded-md"><LogOut className="h-4 w-4" /> Logout</button>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -53,7 +57,7 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
           <button className="flex items-center gap-1 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-semibold"><Download className="h-3 w-3" /> Export CSV</button>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-amber-700" />
-            <div className="text-xs"><div className="font-semibold">Chef David</div></div>
+            <div className="text-xs"><div className="font-semibold">{user?.name ?? "Admin"}</div></div>
           </div>
         </header>
         <main className="flex-1 overflow-auto p-6">{children}</main>
