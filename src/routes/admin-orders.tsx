@@ -11,9 +11,9 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
   const location = useLocation();
   const sections = [
     { label: "OVERVIEW", items: [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard }, { to: "/admin-orders", label: "Live Orders", icon: ShoppingBag }] },
-    { label: "MANAGEMENT", items: [{ to: "/admin-menu", label: "Menu & Items", icon: ClipboardList }, { to: "/admin-slots", label: "Time Slots", icon: Clock }, { to: "/admin", label: "Kitchen Users", icon: Users }] },
-    { label: "FINANCE", items: [{ to: "/admin", label: "Monthly Billing", icon: Wallet }, { to: "/admin", label: "Reports", icon: BarChart3 }] },
-    { label: "SYSTEM", items: [{ to: "/admin", label: "Notifications", icon: Bell }] },
+    { label: "MANAGEMENT", items: [{ to: "/admin-menu", label: "Menu & Items", icon: ClipboardList }, { to: "/admin-slots", label: "Time Slots", icon: Clock }, { to: "/admin-users", label: "Kitchen Users", icon: Users }] },
+    { label: "FINANCE", items: [{ to: "/admin-billing", label: "Monthly Billing", icon: Wallet }, { to: "/admin-reports", label: "Reports", icon: BarChart3 }] },
+    { label: "SYSTEM", items: [{ to: "/admin-notifications", label: "Notifications", icon: Bell }] },
   ];
   return (
     <div className="flex min-h-screen bg-background">
