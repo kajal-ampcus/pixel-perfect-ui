@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MenuRouteImport } from './routes/menu'
@@ -17,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as KitchenNotificationsRouteImport } from './routes/kitchen-notifications'
 import { Route as KitchenHistoryRouteImport } from './routes/kitchen-history'
 import { Route as KitchenRouteImport } from './routes/kitchen'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminSlotsRouteImport } from './routes/admin-slots'
@@ -31,6 +33,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -66,6 +73,11 @@ const KitchenHistoryRoute = KitchenHistoryRouteImport.update({
 const KitchenRoute = KitchenRouteImport.update({
   id: '/kitchen',
   path: '/kitchen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -130,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/admin-slots': typeof AdminSlotsRoute
   '/admin-users': typeof AdminUsersRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/kitchen': typeof KitchenRoute
   '/kitchen-history': typeof KitchenHistoryRoute
   '/kitchen-notifications': typeof KitchenNotificationsRoute
@@ -137,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/wallet': typeof WalletRoute
 }
 export interface FileRoutesByTo {
@@ -150,6 +164,7 @@ export interface FileRoutesByTo {
   '/admin-slots': typeof AdminSlotsRoute
   '/admin-users': typeof AdminUsersRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/kitchen': typeof KitchenRoute
   '/kitchen-history': typeof KitchenHistoryRoute
   '/kitchen-notifications': typeof KitchenNotificationsRoute
@@ -157,6 +172,7 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/wallet': typeof WalletRoute
 }
 export interface FileRoutesById {
@@ -171,6 +187,7 @@ export interface FileRoutesById {
   '/admin-slots': typeof AdminSlotsRoute
   '/admin-users': typeof AdminUsersRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/kitchen': typeof KitchenRoute
   '/kitchen-history': typeof KitchenHistoryRoute
   '/kitchen-notifications': typeof KitchenNotificationsRoute
@@ -178,6 +195,7 @@ export interface FileRoutesById {
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/wallet': typeof WalletRoute
 }
 export interface FileRouteTypes {
@@ -193,6 +211,7 @@ export interface FileRouteTypes {
     | '/admin-slots'
     | '/admin-users'
     | '/dashboard'
+    | '/forgot-password'
     | '/kitchen'
     | '/kitchen-history'
     | '/kitchen-notifications'
@@ -200,6 +219,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/reset-password'
     | '/wallet'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -213,6 +233,7 @@ export interface FileRouteTypes {
     | '/admin-slots'
     | '/admin-users'
     | '/dashboard'
+    | '/forgot-password'
     | '/kitchen'
     | '/kitchen-history'
     | '/kitchen-notifications'
@@ -220,6 +241,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/reset-password'
     | '/wallet'
   id:
     | '__root__'
@@ -233,6 +255,7 @@ export interface FileRouteTypes {
     | '/admin-slots'
     | '/admin-users'
     | '/dashboard'
+    | '/forgot-password'
     | '/kitchen'
     | '/kitchen-history'
     | '/kitchen-notifications'
@@ -240,6 +263,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/notifications'
     | '/orders'
+    | '/reset-password'
     | '/wallet'
   fileRoutesById: FileRoutesById
 }
@@ -254,6 +278,7 @@ export interface RootRouteChildren {
   AdminSlotsRoute: typeof AdminSlotsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   DashboardRoute: typeof DashboardRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   KitchenRoute: typeof KitchenRoute
   KitchenHistoryRoute: typeof KitchenHistoryRoute
   KitchenNotificationsRoute: typeof KitchenNotificationsRoute
@@ -261,6 +286,7 @@ export interface RootRouteChildren {
   MenuRoute: typeof MenuRoute
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   WalletRoute: typeof WalletRoute
 }
 
@@ -271,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -320,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/kitchen'
       fullPath: '/kitchen'
       preLoaderRoute: typeof KitchenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -406,6 +446,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSlotsRoute: AdminSlotsRoute,
   AdminUsersRoute: AdminUsersRoute,
   DashboardRoute: DashboardRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   KitchenRoute: KitchenRoute,
   KitchenHistoryRoute: KitchenHistoryRoute,
   KitchenNotificationsRoute: KitchenNotificationsRoute,
@@ -413,6 +454,7 @@ const rootRouteChildren: RootRouteChildren = {
   MenuRoute: MenuRoute,
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   WalletRoute: WalletRoute,
 }
 export const routeTree = rootRouteImport
