@@ -1,0 +1,180 @@
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import {
+  ChefHat, ClipboardList, History, Bell, LogOut, Search, HelpCircle, Settings,
+  Download, ChevronLeft, ChevronRight, Plus, TrendingUp,
+} from "lucide-react";
+import type { ReactNode } from "react";
+
+export const Route = createFileRoute("/kitchen-history")({ component: KitchenHistory });
+
+function KitchenLayout({ children, title, badge }: { children: ReactNode; title: string; badge?: string }) {
+  const location = useLocation();
+  const items = [
+    { to: "/kitchen", label: "Live Orders", icon: ClipboardList },
+    { to: "/kitchen-history", label: "Order History", icon: History },
+    { to: "/kitchen-notifications", label: "Notifications", icon: Bell, badge: 3 },
+  ];
+  return (
+    <div className="flex min-h-screen bg-background">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar p-4 md:flex">
+        <div className="mb-6 flex items-center gap-2 rounded-lg bg-primary/15 p-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <ChefHat className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-primary leading-tight">Kitchen</div>
+            <div className="text-sm font-bold text-primary leading-tight">Command</div>
+            <div className="text-[9px] tracking-widest text-muted-foreground">STATION 04</div>
+          </div>
+        </div>
+        <nav className="flex flex-1 flex-col gap-1">
+          {items.map(({ to, label, icon: Icon, badge }) => {
+            const active = location.pathname === to;
+            return (
+              <Link key={to} to={to} className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm ${active ? "bg-sidebar-active text-primary border-r-2 border-primary" : "text-sidebar-foreground hover:bg-sidebar-active/60"}`}>
+                <span className="flex items-center gap-3"><Icon className="h-4 w-4" />{label}</span>
+                {badge && <span className="rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">{badge}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="mt-auto flex items-center gap-2 rounded-md border border-border bg-card/40 p-2">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-amber-700" />
+          <div className="text-xs">
+            <div className="font-semibold">Marcus Chen</div>
+            <div className="text-[10px] text-muted-foreground">Head Chef</div>
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 items-center gap-4 border-b border-border bg-card/40 px-6">
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-semibold">{title}</div>
+            {badge && <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-primary">{badge}</span>}
+          </div>
+          <div className="relative ml-auto max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input placeholder="Search orders..." className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary" />
+          </div>
+          <HelpCircle className="h-4 w-4 text-muted-foreground" />
+          <Settings className="h-4 w-4 text-muted-foreground" />
+        </header>
+        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <button className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+          <Plus className="h-5 w-5" />
+        </button>
+        <Link to="/login" className="hidden"><LogOut /></Link>
+      </div>
+    </div>
+  );
+}
+
+function KitchenHistory() {
+  const rows = [
+    { id: "#ORD-9621", emp: "John Simmons", initials: "JS", color: "from-amber-500 to-amber-700", station: "Station 04", items: ["Wagyu Burger Set", "Truffle Fries"], price: "$24.00", time: "14:22:15" },
+    { id: "#ORD-9620", emp: "Alice Wong", initials: "AW", color: "from-purple-500 to-purple-700", station: "Station 04", items: ["Caesar Salad", "Iced Tea"], price: "$22.50", time: "14:18:42" },
+    { id: "#ORD-9619", emp: "Robert K.", initials: "RK", color: "from-rose-500 to-rose-700", station: "Station 03", items: ["Spaghetti Carbonara", "Tiramisu"], price: "$42.00", time: "14:05:01" },
+    { id: "#ORD-9613", emp: "Dana Miller", initials: "DM", color: "from-emerald-500 to-emerald-700", station: "Station 04", items: ["Mushroom Risotto"], price: "$27.00", time: "13:58:20" },
+    { id: "#ORD-9610", emp: "Tom Brady", initials: "TB", color: "from-sky-500 to-sky-700", station: "Station 02", items: ["Double Pepperoni Pizza"], price: "$18.95", time: "13:45:12" },
+  ];
+
+  return (
+    <KitchenLayout title="Order History" badge="KITCHEN">
+      {/* Filters + KPI */}
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr_1.2fr]">
+        <div className="flex items-end gap-3 rounded-xl border border-border bg-card p-4">
+          <div className="flex-1">
+            <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">DATE RANGE</div>
+            <select className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs">
+              <option>Last 24 Hours</option><option>Last 7 Days</option>
+            </select>
+          </div>
+          <div className="flex-1">
+            <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">STATION</div>
+            <select className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs">
+              <option>Station 04</option><option>All Stations</option>
+            </select>
+          </div>
+          <div>
+            <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">EXPORT</div>
+            <button className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+              <Download className="h-3 w-3" /> CSV
+            </button>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="text-[10px] tracking-widest text-muted-foreground">TOTAL ORDERS</div>
+          <div className="mt-2 text-3xl font-bold text-primary">482</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="text-[10px] tracking-widest text-muted-foreground">REVENUE</div>
+          <div className="mt-2 text-3xl font-bold text-primary">$5.2k</div>
+        </div>
+        <div className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-primary/5 p-4">
+          <div className="text-[10px] tracking-widest text-muted-foreground">EFFICIENCY RATING</div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-3xl font-bold">98.4%</span>
+            <span className="flex items-center gap-1 text-xs text-success"><TrendingUp className="h-3 w-3" />+1.2%</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground">Average prep time: 6m 12s</div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30 text-left text-[10px] tracking-wider text-muted-foreground">
+              <th className="px-4 py-3">ORDER ID</th>
+              <th className="px-4 py-3">EMPLOYEE NAME</th>
+              <th className="px-4 py-3">STATION</th>
+              <th className="px-4 py-3">ITEMS</th>
+              <th className="px-4 py-3">TOTAL PRICE</th>
+              <th className="px-4 py-3">COMPLETION TIME</th>
+              <th className="px-4 py-3">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-b border-border/60 last:border-0">
+                <td className="px-4 py-3 text-xs text-primary">{r.id}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${r.color} text-[10px] font-bold text-white`}>{r.initials}</div>
+                    <span className="text-xs">{r.emp}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{r.station}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
+                    {r.items.map((i) => (
+                      <span key={i} className="rounded bg-muted px-2 py-0.5 text-[10px]">{i}</span>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-xs font-semibold text-primary">{r.price}</td>
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{r.time}</td>
+                <td className="px-4 py-3">
+                  <span className="rounded bg-info/20 px-2 py-0.5 text-[10px] font-bold text-info">● COLLECTED</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="flex items-center justify-between border-t border-border p-3 text-xs">
+          <span className="text-muted-foreground">Showing 1-5 of 482 orders</span>
+          <div className="flex items-center gap-1">
+            <button className="rounded p-1 hover:bg-muted"><ChevronLeft className="h-3 w-3" /></button>
+            {[1, 2, 3].map((n) => (
+              <button key={n} className={`h-7 w-7 rounded text-xs ${n === 1 ? "bg-primary font-bold text-primary-foreground" : "hover:bg-muted"}`}>{n}</button>
+            ))}
+            <span className="px-1 text-muted-foreground">…</span>
+            <button className="h-7 w-7 rounded text-xs hover:bg-muted">97</button>
+            <button className="rounded p-1 hover:bg-muted"><ChevronRight className="h-3 w-3" /></button>
+          </div>
+        </div>
+      </div>
+    </KitchenLayout>
+  );
+}
