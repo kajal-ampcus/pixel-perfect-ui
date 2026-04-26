@@ -1,14 +1,18 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   ChefHat, ClipboardList, History, Bell, LogOut, Search, Settings, HelpCircle,
   Plus,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { logout, getCurrentUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/kitchen")({ component: Kitchen });
 
 function KitchenLayout({ children, title }: { children: ReactNode; title: string }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const user = typeof window !== "undefined" ? getCurrentUser() : null;
+  const handleLogout = () => { logout(); navigate({ to: "/login" }); };
   const items = [
     { to: "/kitchen", label: "Live Orders", icon: ClipboardList },
     { to: "/kitchen-history", label: "Order History", icon: History },
@@ -42,7 +46,7 @@ function KitchenLayout({ children, title }: { children: ReactNode; title: string
         <button className="mt-4 flex items-center justify-center gap-2 rounded-md bg-primary py-2 text-xs font-semibold text-primary-foreground">
           <Plus className="h-3 w-3" /> Quick Manual Order
         </button>
-        <Link to="/login" className="mt-2 flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground"><LogOut className="h-4 w-4" /> Logout</Link>
+        <button onClick={handleLogout} className="mt-2 flex w-full items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-active/60 rounded-md"><LogOut className="h-4 w-4" /> Logout</button>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -54,7 +58,7 @@ function KitchenLayout({ children, title }: { children: ReactNode; title: string
           </div>
           <Settings className="h-4 w-4 text-muted-foreground" />
           <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">● Chef Sonia</span>
+          <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">● {user?.name ?? "Chef"}</span>
         </header>
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>

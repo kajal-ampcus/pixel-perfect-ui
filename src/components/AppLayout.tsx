@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -11,6 +11,7 @@ import {
   Plus,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { logout, getCurrentUser } from "@/lib/auth";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,7 +26,7 @@ export function AppLayout({
   title,
   brand = "Canteen Portal",
   brandSub = "Employee Access",
-  user = { name: "Garth C.", role: "ENGINEERING" },
+  user,
   showQuickOrder = false,
 }: {
   children: ReactNode;
@@ -36,6 +37,13 @@ export function AppLayout({
   showQuickOrder?: boolean;
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const session = typeof window !== "undefined" ? getCurrentUser() : null;
+  const displayUser = user ?? {
+    name: session?.name ?? "Guest",
+    role: (session?.department ?? "EMPLOYEE").toUpperCase(),
+  };
+  const handleLogout = () => { logout(); navigate({ to: "/login" }); };
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       {/* Sidebar */}
@@ -80,12 +88,12 @@ export function AppLayout({
           })}
         </nav>
 
-        <Link
-          to="/login"
-          className="mt-4 flex items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground hover:text-primary"
+        <button
+          onClick={handleLogout}
+          className="mt-4 flex w-full items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground hover:text-primary"
         >
           <LogOut className="h-4 w-4" /> Logout
-        </Link>
+        </button>
       </aside>
 
       {/* Main */}
@@ -110,9 +118,9 @@ export function AppLayout({
           </button>
           <div className="flex items-center gap-2">
             <div className="text-right">
-              <div className="text-xs font-semibold">{user.name}</div>
+              <div className="text-xs font-semibold">{displayUser.name}</div>
               <div className="text-[10px] tracking-widest text-muted-foreground">
-                {user.role}
+                {displayUser.role}
               </div>
             </div>
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-amber-700" />
