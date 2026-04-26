@@ -1,8 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  LayoutDashboard, ClipboardList, Clock, Users, Wallet, BarChart3, Bell,
-  ShoppingBag, IndianRupee, UserCheck, AlertTriangle, Search, Download, LogOut, HelpCircle,
-} from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Users } from "lucide-react";
+import { AdminLayout } from "./admin-orders";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
