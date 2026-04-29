@@ -20,7 +20,6 @@ import { Route as KitchenHistoryRouteImport } from './routes/kitchen-history'
 import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AdminUsersRouteImport } from './routes/admin-users'
 import { Route as AdminSlotsRouteImport } from './routes/admin-slots'
 import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
@@ -85,11 +84,6 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/admin-users',
-  path: '/admin-users',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminSlotsRoute = AdminSlotsRouteImport.update({
   id: '/admin-slots',
   path: '/admin-slots',
@@ -140,7 +134,6 @@ export interface FileRoutesByFullPath {
   '/admin-orders': typeof AdminOrdersRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-slots': typeof AdminSlotsRoute
-  '/admin-users': typeof AdminUsersRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/kitchen': typeof KitchenRoute
@@ -162,7 +155,6 @@ export interface FileRoutesByTo {
   '/admin-orders': typeof AdminOrdersRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-slots': typeof AdminSlotsRoute
-  '/admin-users': typeof AdminUsersRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/kitchen': typeof KitchenRoute
@@ -185,7 +177,6 @@ export interface FileRoutesById {
   '/admin-orders': typeof AdminOrdersRoute
   '/admin-reports': typeof AdminReportsRoute
   '/admin-slots': typeof AdminSlotsRoute
-  '/admin-users': typeof AdminUsersRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/kitchen': typeof KitchenRoute
@@ -209,7 +200,6 @@ export interface FileRouteTypes {
     | '/admin-orders'
     | '/admin-reports'
     | '/admin-slots'
-    | '/admin-users'
     | '/dashboard'
     | '/forgot-password'
     | '/kitchen'
@@ -231,7 +221,6 @@ export interface FileRouteTypes {
     | '/admin-orders'
     | '/admin-reports'
     | '/admin-slots'
-    | '/admin-users'
     | '/dashboard'
     | '/forgot-password'
     | '/kitchen'
@@ -253,7 +242,6 @@ export interface FileRouteTypes {
     | '/admin-orders'
     | '/admin-reports'
     | '/admin-slots'
-    | '/admin-users'
     | '/dashboard'
     | '/forgot-password'
     | '/kitchen'
@@ -276,7 +264,6 @@ export interface RootRouteChildren {
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSlotsRoute: typeof AdminSlotsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   KitchenRoute: typeof KitchenRoute
@@ -369,13 +356,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin-users': {
-      id: '/admin-users'
-      path: '/admin-users'
-      fullPath: '/admin-users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin-slots': {
       id: '/admin-slots'
       path: '/admin-slots'
@@ -444,7 +424,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminOrdersRoute: AdminOrdersRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSlotsRoute: AdminSlotsRoute,
-  AdminUsersRoute: AdminUsersRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   KitchenRoute: KitchenRoute,

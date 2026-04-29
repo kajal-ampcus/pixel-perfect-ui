@@ -1,74 +1,8 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
-import {
-  ChefHat, ClipboardList, History, Bell, LogOut, Search, HelpCircle, Settings,
-  Download, ChevronLeft, ChevronRight, Plus, TrendingUp,
-} from "lucide-react";
-import type { ReactNode } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Download, ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
+import { KitchenLayout } from "./kitchen";
 
 export const Route = createFileRoute("/kitchen-history")({ component: KitchenHistory });
-
-function KitchenLayout({ children, title, badge }: { children: ReactNode; title: string; badge?: string }) {
-  const location = useLocation();
-  const items = [
-    { to: "/kitchen", label: "Live Orders", icon: ClipboardList },
-    { to: "/kitchen-history", label: "Order History", icon: History },
-    { to: "/kitchen-notifications", label: "Notifications", icon: Bell, badge: 3 },
-  ];
-  return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar p-4 md:flex">
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-primary/15 p-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ChefHat className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-primary leading-tight">Kitchen</div>
-            <div className="text-sm font-bold text-primary leading-tight">Command</div>
-            <div className="text-[9px] tracking-widest text-muted-foreground">STATION 04</div>
-          </div>
-        </div>
-        <nav className="flex flex-1 flex-col gap-1">
-          {items.map(({ to, label, icon: Icon, badge }) => {
-            const active = location.pathname === to;
-            return (
-              <Link key={to} to={to} className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm ${active ? "bg-sidebar-active text-primary border-r-2 border-primary" : "text-sidebar-foreground hover:bg-sidebar-active/60"}`}>
-                <span className="flex items-center gap-3"><Icon className="h-4 w-4" />{label}</span>
-                {badge && <span className="rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">{badge}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mt-auto flex items-center gap-2 rounded-md border border-border bg-card/40 p-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-amber-700" />
-          <div className="text-xs">
-            <div className="font-semibold">Marcus Chen</div>
-            <div className="text-[10px] text-muted-foreground">Head Chef</div>
-          </div>
-        </div>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-4 border-b border-border bg-card/40 px-6">
-          <div className="flex items-center gap-3">
-            <div className="text-sm font-semibold">{title}</div>
-            {badge && <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-primary">{badge}</span>}
-          </div>
-          <div className="relative ml-auto max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input placeholder="Search orders..." className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary" />
-          </div>
-          <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          <Settings className="h-4 w-4 text-muted-foreground" />
-        </header>
-        <main className="flex-1 overflow-auto p-6">{children}</main>
-        <button className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
-          <Plus className="h-5 w-5" />
-        </button>
-        <Link to="/login" className="hidden"><LogOut /></Link>
-      </div>
-    </div>
-  );
-}
 
 function KitchenHistory() {
   const rows = [
@@ -80,7 +14,7 @@ function KitchenHistory() {
   ];
 
   return (
-    <KitchenLayout title="Order History" badge="KITCHEN">
+    <KitchenLayout title="Order History">
       {/* Filters + KPI */}
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr_1.2fr]">
         <div className="flex items-end gap-3 rounded-xl border border-border bg-card p-4">

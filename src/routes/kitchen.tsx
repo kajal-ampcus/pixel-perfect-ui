@@ -1,67 +1,49 @@
-import { createFileRoute, Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ChefHat, ClipboardList, History, Bell, LogOut, Search, Settings, HelpCircle,
   Plus,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { logout, getCurrentUser } from "@/lib/auth";
+import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/kitchen")({ component: Kitchen });
 
-function KitchenLayout({ children, title }: { children: ReactNode; title: string }) {
-  const location = useLocation();
+const kitchenNav: BottomNavItem[] = [
+  { to: "/kitchen", label: "Live", icon: ClipboardList, color: "bg-orange-500" },
+  { to: "/kitchen-history", label: "History", icon: History, color: "bg-cyan-500" },
+  { to: "/kitchen-notifications", label: "Alerts", icon: Bell, color: "bg-rose-500" },
+];
+
+export function KitchenLayout({ children, title }: { children: ReactNode; title: string }) {
   const navigate = useNavigate();
   const user = typeof window !== "undefined" ? getCurrentUser() : null;
   const handleLogout = () => { logout(); navigate({ to: "/login" }); };
-  const items = [
-    { to: "/kitchen", label: "Live Orders", icon: ClipboardList },
-    { to: "/kitchen-history", label: "Order History", icon: History },
-    { to: "/kitchen-notifications", label: "Notifications", icon: Bell },
-  ];
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar p-4 md:flex">
-        <div className="mb-6 rounded-lg bg-primary/15 p-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <ChefHat className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-primary">Kitchen</div>
-              <div className="text-sm font-bold text-primary">Command</div>
-              <div className="text-[10px] tracking-widest text-muted-foreground">CORPORATE</div>
-            </div>
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-card/60 px-4 backdrop-blur md:px-6">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <ChefHat className="h-4 w-4" />
           </div>
+          <div className="hidden sm:block text-sm font-semibold leading-tight">{title}</div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1">
-          {items.map(({ to, label, icon: Icon }) => {
-            const active = location.pathname === to;
-            return (
-              <Link key={to} to={to} className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${active ? "bg-sidebar-active text-primary border-r-2 border-primary" : "text-sidebar-foreground hover:bg-sidebar-active/60"}`}>
-                <Icon className="h-4 w-4" />{label}
-              </Link>
-            );
-          })}
-        </nav>
-        <button className="mt-4 flex items-center justify-center gap-2 rounded-md bg-primary py-2 text-xs font-semibold text-primary-foreground">
-          <Plus className="h-3 w-3" /> Quick Manual Order
+        <div className="relative mx-auto hidden max-w-md flex-1 md:block">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input placeholder="Search orders, items, or staff..." className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary" />
+        </div>
+        <button className="ml-auto hidden items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground sm:flex">
+          <Plus className="h-3 w-3" /> Manual Order
         </button>
-        <button onClick={handleLogout} className="mt-2 flex w-full items-center gap-2 px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-active/60 rounded-md"><LogOut className="h-4 w-4" /> Logout</button>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-4 border-b border-border bg-card/40 px-6">
-          <div className="text-sm font-semibold">{title}</div>
-          <div className="relative mx-auto max-w-md flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input placeholder="Search orders, items, or staff..." className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary" />
-          </div>
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">● {user?.name ?? "Chef"}</span>
-        </header>
-        <main className="flex-1 overflow-auto p-6">{children}</main>
-      </div>
+        <Settings className="h-4 w-4 text-muted-foreground" />
+        <HelpCircle className="hidden h-4 w-4 text-muted-foreground sm:block" />
+        <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">● {user?.name ?? "Chef"}</span>
+        <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive" aria-label="Logout">
+          <LogOut className="h-4 w-4" />
+        </button>
+      </header>
+      <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-28 md:p-6 md:pb-28">{children}</main>
+      <BottomNav items={kitchenNav} />
     </div>
   );
 }
@@ -154,7 +136,7 @@ function Kitchen() {
         </div>
       </div>
 
-      <button className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+      <button className="fixed bottom-24 right-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
         <Plus className="h-5 w-5" />
       </button>
     </KitchenLayout>
