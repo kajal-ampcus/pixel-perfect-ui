@@ -96,12 +96,12 @@ function AddSlotModal({ onClose }: { onClose: () => void }) {
   const [category, setCategory] = useState<ItemCategory>("Veg");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
-  // Reset category when meal type changes if invalid
   const validCategories = CATEGORIES_BY_TYPE[mealType];
-  if (!validCategories.includes(category)) {
-    // pick first valid synchronously
-    setCategory(validCategories[0]);
-  }
+  useEffect(() => {
+    if (!validCategories.includes(category)) {
+      setCategory(validCategories[0]);
+    }
+  }, [mealType, category, validCategories]);
 
   const filteredItems = useMemo(
     () => ALL_ITEMS.filter((i) => i.type === mealType && i.category === category),
