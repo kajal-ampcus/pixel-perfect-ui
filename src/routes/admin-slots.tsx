@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Clock, Plus, Pencil, X, Sparkles, Calendar, Check } from "lucide-react";
 import { AdminLayout } from "./admin-orders";
 import { ALL_ITEMS, type ItemCategory, type ItemType } from "./admin-menu";
