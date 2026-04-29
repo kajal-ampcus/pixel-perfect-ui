@@ -14,7 +14,7 @@ function KitchenHistory() {
   ];
 
   return (
-    <KitchenLayout title="Order History" badge="KITCHEN">
+    <KitchenLayout title="Order History">
       {/* Filters + KPI */}
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr_1.2fr]">
         <div className="flex items-end gap-3 rounded-xl border border-border bg-card p-4">
