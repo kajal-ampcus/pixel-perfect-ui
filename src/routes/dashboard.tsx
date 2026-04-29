@@ -175,7 +175,7 @@ function Dashboard() {
       </div>
 
       {/* Floating cart */}
-      <button className="fixed bottom-6 right-6 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+      <button className="fixed bottom-24 right-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
         <ShoppingCart className="h-5 w-5" />
       </button>
     </AppLayout>
