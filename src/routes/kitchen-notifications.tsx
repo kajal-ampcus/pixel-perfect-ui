@@ -1,64 +1,10 @@
-import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  ChefHat, ClipboardList, History, Bell, Search, HelpCircle, Settings,
   ShoppingBag, AlertTriangle, RefreshCw, Package, AlertOctagon, Filter, CheckCheck,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { KitchenLayout } from "./kitchen";
 
 export const Route = createFileRoute("/kitchen-notifications")({ component: KitchenNotifications });
-
-function KitchenLayout({ children, title }: { children: ReactNode; title: string }) {
-  const location = useLocation();
-  const items = [
-    { to: "/kitchen", label: "Live Orders", icon: ClipboardList },
-    { to: "/kitchen-history", label: "Order History", icon: History },
-    { to: "/kitchen-notifications", label: "Notifications", icon: Bell, badge: 3 },
-  ];
-  return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar p-4 md:flex">
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-primary/15 p-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ChefHat className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-primary leading-tight">Kitchen Portal</div>
-            <div className="text-[9px] tracking-widest text-muted-foreground">STATION 04</div>
-          </div>
-        </div>
-        <nav className="flex flex-1 flex-col gap-1">
-          {items.map(({ to, label, icon: Icon, badge }) => {
-            const active = location.pathname === to;
-            return (
-              <Link key={to} to={to} className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm ${active ? "bg-sidebar-active text-primary border-r-2 border-primary" : "text-sidebar-foreground hover:bg-sidebar-active/60"}`}>
-                <span className="flex items-center gap-3"><Icon className="h-4 w-4" />{label}</span>
-                {badge && <span className="rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">{badge}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="mt-auto flex items-center gap-2 rounded-md border border-border bg-card/40 p-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-amber-700" />
-          <div className="text-xs">
-            <div className="font-semibold">Walter Adler</div>
-            <div className="text-[10px] text-success">● Active</div>
-          </div>
-        </div>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-4 border-b border-border bg-card/40 px-6">
-          <div className="text-sm font-semibold">FrozenOMS</div>
-          <div className="ml-auto flex items-center gap-4 text-xs text-muted-foreground">
-            <span>Last Sync</span><span>Profile</span><span>Mason</span>
-            <Search className="h-4 w-4" /><HelpCircle className="h-4 w-4" /><Settings className="h-4 w-4" />
-          </div>
-        </header>
-        <main className="flex-1 overflow-auto p-6">{title && null}{children}</main>
-      </div>
-    </div>
-  );
-}
 
 function KitchenNotifications() {
   const list = [
