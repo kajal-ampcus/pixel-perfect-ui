@@ -69,43 +69,43 @@ function AdminMenu() {
         <div className="text-xs text-muted-foreground">SORT BY: <span className="rounded border border-border bg-card px-2 py-1 text-foreground">Newest First ▾</span></div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((it) => (
-          <div key={it.name} className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="relative h-40">
-              <img src={it.img} alt={it.name} className="h-full w-full object-cover" />
-              <span className={`absolute left-2 top-2 rounded px-2 py-0.5 text-[9px] font-bold ${it.tagColor}`}>{it.tag}</span>
-              <span className="absolute right-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-bold text-white">{it.type.toUpperCase()}</span>
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        {items.map((it, idx) => (
+          <div
+            key={it.name}
+            className={`flex items-center gap-3 p-3 sm:gap-4 sm:p-4 ${idx !== items.length - 1 ? "border-b border-border/60" : ""}`}
+          >
+            <img src={it.img} alt={it.name} className="h-14 w-14 flex-shrink-0 rounded-md object-cover sm:h-16 sm:w-16" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="truncate font-semibold">{it.name}</div>
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${it.tagColor}`}>{it.tag}</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">{it.type.toUpperCase()}</span>
+              </div>
+              <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{it.desc}</p>
+              <div className="mt-1 text-[10px] tracking-widest text-muted-foreground">{it.category.toUpperCase()}</div>
             </div>
-            <div className="p-3">
-              <div className="flex items-start justify-between">
-                <div className="font-semibold">{it.name}</div>
-                <div className="font-bold text-primary">{it.price}</div>
+            <div className="flex flex-shrink-0 items-center gap-3">
+              <div className="text-right font-bold text-primary">{it.price}</div>
+              <div className={`flex h-4 w-7 items-center rounded-full p-0.5 ${it.live ? "bg-primary" : "bg-muted"}`}>
+                <div className={`h-3 w-3 rounded-full bg-white transition-transform ${it.live ? "translate-x-3" : ""}`} />
               </div>
-              <p className="mt-1 line-clamp-2 text-[10px] text-muted-foreground">{it.desc}</p>
-              <div className="mt-3 flex items-center justify-between border-t border-border pt-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] tracking-widest text-muted-foreground">{it.category.toUpperCase()}</span>
-                  <div className={`flex h-4 w-7 items-center rounded-full p-0.5 ${it.live ? "bg-primary" : "bg-muted"}`}>
-                    <div className={`h-3 w-3 rounded-full bg-white transition-transform ${it.live ? "translate-x-3" : ""}`} />
-                  </div>
-                </div>
-                <button className="rounded p-1 text-muted-foreground hover:bg-muted"><Pencil className="h-3 w-3" /></button>
-              </div>
+              <button className="rounded p-1 text-muted-foreground hover:bg-muted"><Pencil className="h-3.5 w-3.5" /></button>
             </div>
           </div>
         ))}
 
         {items.length === 0 && (
-          <div className="col-span-full rounded-xl border border-dashed border-border bg-card/40 p-10 text-center text-sm text-muted-foreground">
+          <div className="p-10 text-center text-sm text-muted-foreground">
             No items in this category yet.
           </div>
         )}
 
-        <button onClick={() => setShowAdd(true)} className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card/40 p-6 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-primary"><Plus className="h-5 w-5" /></div>
-          <div className="text-sm font-semibold">Create New Menu Item</div>
-          <div className="text-[10px] text-muted-foreground">Add ingredients, set prices, and go live.</div>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="flex w-full items-center justify-center gap-2 border-t border-dashed border-border bg-muted/20 p-3 text-xs font-semibold text-primary hover:bg-muted/40"
+        >
+          <Plus className="h-4 w-4" /> Create New Menu Item
         </button>
       </div>
 
