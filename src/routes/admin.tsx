@@ -96,28 +96,15 @@ function Admin() {
         </table>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="mb-4 font-semibold">Top Ordered Items</div>
-          <div className="space-y-3">
-            {top.map((t) => (
-              <div key={t.name}>
-                <div className="flex justify-between text-xs"><span>{t.name}</span><span className="text-muted-foreground">{t.count}</span></div>
-                <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${t.val}%` }} /></div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="mb-4 font-semibold">Department Consumption</div>
-          <div className="space-y-2">
-            {dept.map((d) => (
-              <div key={d.name} className="flex items-center gap-2">
-                <span className="w-24 text-[10px] text-muted-foreground">{d.name}</span>
-                <div className="h-3 flex-1 rounded-full bg-muted"><div className={`h-3 rounded-full ${d.color}`} style={{ width: `${d.val}%` }} /></div>
-              </div>
-            ))}
-          </div>
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="mb-4 font-semibold">Top Ordered Items</div>
+        <div className="space-y-3">
+          {top.map((t) => (
+            <div key={t.name}>
+              <div className="flex justify-between text-xs"><span>{t.name}</span><span className="text-muted-foreground">{t.count}</span></div>
+              <div className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-1.5 rounded-full bg-primary" style={{ width: `${t.val}%` }} /></div>
+            </div>
+          ))}
         </div>
       </div>
     </AdminLayout>
