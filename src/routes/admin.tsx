@@ -24,7 +24,7 @@ function Admin() {
 
   return (
     <AdminLayout crumb="Dashboard">
-      <div className="mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-start justify-between">
