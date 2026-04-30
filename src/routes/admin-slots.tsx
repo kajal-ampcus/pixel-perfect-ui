@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Clock, Plus, Pencil, X, Sparkles, Calendar, Check } from "lucide-react";
 import { AdminLayout } from "./admin-orders";
-import { ALL_ITEMS, type ItemCategory, type ItemType } from "./admin-menu";
+import { useStore, formatINR, type ItemCategory, type ItemType } from "@/lib/store";
 
 export const Route = createFileRoute("/admin-slots")({ component: AdminSlots });
 
@@ -88,6 +88,7 @@ function AdminSlots() {
 }
 
 function AddSlotModal({ onClose }: { onClose: () => void }) {
+  const menu = useStore((s) => s.menu);
   const [date, setDate] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -104,8 +105,8 @@ function AddSlotModal({ onClose }: { onClose: () => void }) {
   }, [mealType, category, validCategories]);
 
   const filteredItems = useMemo(
-    () => ALL_ITEMS.filter((i) => i.type === mealType && i.category === category),
-    [mealType, category],
+    () => menu.filter((i) => i.type === mealType && i.category === category && i.live),
+    [menu, mealType, category],
   );
 
   const toggleItem = (name: string) =>
@@ -210,7 +211,7 @@ function AddSlotModal({ onClose }: { onClose: () => void }) {
                   >
                     <div>
                       <div className="text-xs font-semibold">{it.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{it.category} · {it.type} · {it.price}</div>
+                      <div className="text-[10px] text-muted-foreground">{it.category} · {it.type} · {formatINR(it.price)}</div>
                     </div>
                     <div className={`flex h-5 w-5 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
                       {checked && <Check className="h-3 w-3" />}
