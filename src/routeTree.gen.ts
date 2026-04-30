@@ -21,7 +21,6 @@ import { Route as KitchenRouteImport } from './routes/kitchen'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminSlotsRouteImport } from './routes/admin-slots'
-import { Route as AdminReportsRouteImport } from './routes/admin-reports'
 import { Route as AdminOrdersRouteImport } from './routes/admin-orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin-notifications'
 import { Route as AdminMenuRouteImport } from './routes/admin-menu'
@@ -89,11 +88,6 @@ const AdminSlotsRoute = AdminSlotsRouteImport.update({
   path: '/admin-slots',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminReportsRoute = AdminReportsRouteImport.update({
-  id: '/admin-reports',
-  path: '/admin-reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/admin-orders',
   path: '/admin-orders',
@@ -132,7 +126,6 @@ export interface FileRoutesByFullPath {
   '/admin-menu': typeof AdminMenuRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
-  '/admin-reports': typeof AdminReportsRoute
   '/admin-slots': typeof AdminSlotsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -153,7 +146,6 @@ export interface FileRoutesByTo {
   '/admin-menu': typeof AdminMenuRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
-  '/admin-reports': typeof AdminReportsRoute
   '/admin-slots': typeof AdminSlotsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -175,7 +167,6 @@ export interface FileRoutesById {
   '/admin-menu': typeof AdminMenuRoute
   '/admin-notifications': typeof AdminNotificationsRoute
   '/admin-orders': typeof AdminOrdersRoute
-  '/admin-reports': typeof AdminReportsRoute
   '/admin-slots': typeof AdminSlotsRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -198,7 +189,6 @@ export interface FileRouteTypes {
     | '/admin-menu'
     | '/admin-notifications'
     | '/admin-orders'
-    | '/admin-reports'
     | '/admin-slots'
     | '/dashboard'
     | '/forgot-password'
@@ -219,7 +209,6 @@ export interface FileRouteTypes {
     | '/admin-menu'
     | '/admin-notifications'
     | '/admin-orders'
-    | '/admin-reports'
     | '/admin-slots'
     | '/dashboard'
     | '/forgot-password'
@@ -240,7 +229,6 @@ export interface FileRouteTypes {
     | '/admin-menu'
     | '/admin-notifications'
     | '/admin-orders'
-    | '/admin-reports'
     | '/admin-slots'
     | '/dashboard'
     | '/forgot-password'
@@ -262,7 +250,6 @@ export interface RootRouteChildren {
   AdminMenuRoute: typeof AdminMenuRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
-  AdminReportsRoute: typeof AdminReportsRoute
   AdminSlotsRoute: typeof AdminSlotsRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -363,13 +350,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSlotsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin-reports': {
-      id: '/admin-reports'
-      path: '/admin-reports'
-      fullPath: '/admin-reports'
-      preLoaderRoute: typeof AdminReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin-orders': {
       id: '/admin-orders'
       path: '/admin-orders'
@@ -422,7 +402,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMenuRoute: AdminMenuRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
-  AdminReportsRoute: AdminReportsRoute,
   AdminSlotsRoute: AdminSlotsRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

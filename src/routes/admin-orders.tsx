@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  LayoutDashboard, ClipboardList, Clock, Wallet, BarChart3, Bell,
+  LayoutDashboard, ClipboardList, Clock, Wallet, Bell,
   ChefHat, Search, Download, LogOut, ShoppingBag,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -16,7 +16,6 @@ const adminNav: BottomNavItem[] = [
   { to: "/admin-slots", label: "Slots", icon: Clock, color: "bg-cyan-500" },
   { to: "/admin-menu", label: "Menu", icon: ClipboardList, color: "bg-orange-500" },
   { to: "/admin-billing", label: "Billing", icon: Wallet, color: "bg-amber-500" },
-  { to: "/admin-reports", label: "Reports", icon: BarChart3, color: "bg-emerald-500" },
   { to: "/admin-notifications", label: "Alerts", icon: Bell, color: "bg-rose-500" },
 ];
 
