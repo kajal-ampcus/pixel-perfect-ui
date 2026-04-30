@@ -21,13 +21,6 @@ function Admin() {
     { name: "Garden Fresh Salad", count: "76 orders", val: 55 },
   ];
 
-  const dept = [
-    { name: "ENGINEERING", val: 90, color: "bg-primary" },
-    { name: "MARKETING", val: 70, color: "bg-warning" },
-    { name: "SALES", val: 60, color: "bg-success" },
-    { name: "HR", val: 40, color: "bg-info" },
-    { name: "FINANCE", val: 30, color: "bg-destructive" },
-  ];
 
   return (
     <AdminLayout crumb="Dashboard">
