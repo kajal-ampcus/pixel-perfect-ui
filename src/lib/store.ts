@@ -161,7 +161,8 @@ function subscribe(fn: () => void) {
 export function useStore<T>(selector: (s: StoreShape) => T): T {
   const [snap, setSnap] = useState<T>(() => selector(state));
   useEffect(() => {
-    return subscribe(() => setSnap(selector(state)));
+    const unsub = subscribe(() => setSnap(selector(state)));
+    return () => { unsub(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return snap;
