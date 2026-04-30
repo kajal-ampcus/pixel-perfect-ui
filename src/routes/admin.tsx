@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ShoppingBag, IndianRupee, UserCheck, AlertTriangle } from "lucide-react";
+import { ShoppingBag, IndianRupee } from "lucide-react";
 import { AdminLayout } from "./admin-orders";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
