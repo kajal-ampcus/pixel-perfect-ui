@@ -63,8 +63,6 @@ function AdminBilling() {
           Showing 1-4 of 1,240 employees<div className="flex gap-1"><button className="h-6 w-6 rounded border border-border">‹</button><button className="h-6 w-6 rounded border border-border">›</button></div>
         </div>
       </div>
-        </div>
-      </div>
 
       {showTxn && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4">
