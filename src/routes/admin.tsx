@@ -8,8 +8,6 @@ function Admin() {
   const stats = [
     { icon: ShoppingBag, label: "Today's Orders", value: "247", delta: "+12%", color: "text-primary" },
     { icon: IndianRupee, label: "Today's Revenue", value: "₹18,430", delta: "+8.2%", color: "text-success" },
-    { icon: UserCheck, label: "Active Employees", value: "184", color: "text-info" },
-    { icon: AlertTriangle, label: "Pending Approvals", value: "7", color: "text-warning" },
   ];
 
   const live = [
