@@ -35,57 +35,34 @@ function AdminBilling() {
         <Stat label="Reconciliation Rate" value="92%" icon={CheckCircle2} color="text-success" progress={92} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border p-4">
-            <div className="font-semibold">Salary Deduction Table</div>
-            <div className="flex gap-2"><Filter className="h-4 w-4 text-muted-foreground" /><MoreVertical className="h-4 w-4 text-muted-foreground" /></div>
-          </div>
-          <table className="w-full text-sm">
-            <thead><tr className="border-b border-border text-left text-[10px] tracking-widest text-muted-foreground">
-              <th className="px-4 py-2">EMPLOYEE NAME</th><th className="px-4 py-2">ID</th><th className="px-4 py-2">DEPT</th>
-              <th className="px-4 py-2">MEALS</th><th className="px-4 py-2">TOTAL BILL</th><th className="px-4 py-2">STATUS</th><th className="px-4 py-2">ACTIONS</th>
-            </tr></thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b border-border/40 last:border-0">
-                  <td className="px-4 py-3"><div className="flex items-center gap-2"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold">{r.name.split(" ").map(n => n[0]).join("")}</div>{r.name}</div></td>
-                  <td className="px-4 py-3 font-mono text-xs">{r.id}</td>
-                  <td className="px-4 py-3 text-xs">{r.dept}</td>
-                  <td className="px-4 py-3 text-xs">{r.meals}</td>
-                  <td className="px-4 py-3 font-semibold">{r.total}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${r.color}`}>{r.status}</span></td>
-                  <td className="px-4 py-3"><button onClick={() => setShowTxn(r.name)} className="text-xs text-primary">View History</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="flex items-center justify-between p-4 text-xs text-muted-foreground">
-            Showing 1-4 of 1,240 employees<div className="flex gap-1"><button className="h-6 w-6 rounded border border-border">‹</button><button className="h-6 w-6 rounded border border-border">›</button></div>
-          </div>
+      <div className="rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <div className="font-semibold">Salary Deduction Table</div>
+          <div className="flex gap-2"><Filter className="h-4 w-4 text-muted-foreground" /><MoreVertical className="h-4 w-4 text-muted-foreground" /></div>
         </div>
-
-        <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 text-sm font-semibold">Dept-wise Consumption</div>
-            <div className="flex h-24 items-end gap-2">
-              {[60, 90, 50, 30, 70].map((h, i) => <div key={i} className="flex-1 rounded-t bg-primary/70" style={{ height: `${h}%` }} />)}
-            </div>
-            <div className="mt-1 grid grid-cols-5 text-center text-[9px] text-muted-foreground"><span>ENG</span><span>MKT</span><span>SALES</span><span>HR</span><span>OPS</span></div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold"><Sparkles className="h-4 w-4 text-primary" /> Quick Actions</div>
-            <div className="mb-3 text-[10px] text-muted-foreground">System has identified 12 auto-match candidates for salary reconciliation.</div>
-            <button className="mb-2 w-full rounded-md bg-primary py-2 text-xs font-semibold text-primary-foreground">Auto-Reconcile Matches</button>
-            <button className="w-full rounded-md border border-border py-2 text-xs font-semibold">Review Flagged Items (3)</button>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-xs">
-            <div className="mb-2 text-[10px] tracking-widest text-muted-foreground">RECENT ACTIVITY</div>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 h-3 w-3 text-success" /><div><div>Batch #1102 Processed</div><div className="text-[10px] text-muted-foreground">2 hours ago</div></div></div>
-              <div className="flex items-start gap-2"><Flag className="mt-0.5 h-3 w-3 text-destructive" /><div><div>Flagged item #441 resolved</div><div className="text-[10px] text-muted-foreground">5 hours ago</div></div></div>
-            </div>
-          </div>
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-border text-left text-[10px] tracking-widest text-muted-foreground">
+            <th className="px-4 py-2">EMPLOYEE NAME</th><th className="px-4 py-2">ID</th><th className="px-4 py-2">DEPT</th>
+            <th className="px-4 py-2">MEALS</th><th className="px-4 py-2">TOTAL BILL</th><th className="px-4 py-2">STATUS</th><th className="px-4 py-2">ACTIONS</th>
+          </tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-b border-border/40 last:border-0">
+                <td className="px-4 py-3"><div className="flex items-center gap-2"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-[10px] font-bold">{r.name.split(" ").map(n => n[0]).join("")}</div>{r.name}</div></td>
+                <td className="px-4 py-3 font-mono text-xs">{r.id}</td>
+                <td className="px-4 py-3 text-xs">{r.dept}</td>
+                <td className="px-4 py-3 text-xs">{r.meals}</td>
+                <td className="px-4 py-3 font-semibold">{r.total}</td>
+                <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${r.color}`}>{r.status}</span></td>
+                <td className="px-4 py-3"><button onClick={() => setShowTxn(r.name)} className="text-xs text-primary">View History</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="flex items-center justify-between p-4 text-xs text-muted-foreground">
+          Showing 1-4 of 1,240 employees<div className="flex gap-1"><button className="h-6 w-6 rounded border border-border">‹</button><button className="h-6 w-6 rounded border border-border">›</button></div>
+        </div>
+      </div>
         </div>
       </div>
 
