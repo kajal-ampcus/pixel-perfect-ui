@@ -1,9 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard,
+  LayoutGrid,
+  ShoppingBag,
+  Clock3,
+  ReceiptText,
+  Flame,
   UtensilsCrossed,
-  ClipboardList,
-  Wallet,
   Bell,
   LogOut,
   Search,
@@ -12,13 +14,14 @@ import {
 import type { ReactNode } from "react";
 import { logout, getCurrentUser } from "@/lib/auth";
 import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const nav: BottomNavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "bg-indigo-500" },
-  { to: "/menu", label: "Menu", icon: UtensilsCrossed, color: "bg-blue-500" },
-  { to: "/orders", label: "Orders", icon: ClipboardList, color: "bg-cyan-500" },
-  { to: "/wallet", label: "Wallet", icon: Wallet, color: "bg-amber-500" },
-  { to: "/notifications", label: "Alerts", icon: Bell, color: "bg-rose-500" },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutGrid, color: "bg-gradient-to-br from-violet-400 to-indigo-600" },
+  { to: "/menu", label: "Menu", icon: ShoppingBag, color: "bg-gradient-to-br from-sky-400 to-blue-700" },
+  { to: "/orders", label: "Orders", icon: Clock3, color: "bg-gradient-to-br from-cyan-300 to-sky-700" },
+  { to: "/wallet", label: "Wallet", icon: ReceiptText, color: "bg-gradient-to-br from-amber-300 to-orange-600" },
+  { to: "/notifications", label: "Alerts", icon: Flame, color: "bg-gradient-to-br from-rose-400 to-red-700" },
 ];
 
 export function AppLayout({
@@ -72,6 +75,7 @@ export function AppLayout({
         <button className="text-muted-foreground hover:text-foreground">
           <Settings className="h-4 w-4" />
         </button>
+        <ThemeToggle />
         <div className="flex items-center gap-2">
           <div className="hidden text-right sm:block">
             <div className="text-xs font-semibold leading-none">{displayUser.name}</div>

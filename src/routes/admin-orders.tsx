@@ -1,24 +1,25 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  LayoutDashboard, ClipboardList, Clock, Wallet, Bell,
-  ChefHat, Search, Download, LogOut, ShoppingBag,
+  LayoutGrid, ChefHat, Clock3, ReceiptText, Flame,
+  Search, LogOut, ShoppingBag,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { logout, getCurrentUser } from "@/lib/auth";
 import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useStore, updateOrderStatus, formatINR, type OrderStatus } from "@/lib/store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-orders")({ component: AdminOrders });
 
 const adminNav: BottomNavItem[] = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, color: "bg-indigo-500" },
-  { to: "/admin-orders", label: "Orders", icon: ShoppingBag, color: "bg-blue-500" },
-  { to: "/admin-slots", label: "Slots", icon: Clock, color: "bg-cyan-500" },
-  { to: "/admin-menu", label: "Menu", icon: ClipboardList, color: "bg-orange-500" },
-  { to: "/admin-billing", label: "Billing", icon: Wallet, color: "bg-amber-500" },
-  { to: "/admin-notifications", label: "Alerts", icon: Bell, color: "bg-rose-500" },
+  { to: "/admin", label: "Dashboard", icon: LayoutGrid, color: "bg-gradient-to-br from-violet-400 to-indigo-600" },
+  { to: "/admin-orders", label: "Orders", icon: ShoppingBag, color: "bg-gradient-to-br from-sky-400 to-blue-700" },
+  { to: "/admin-slots", label: "Slots", icon: Clock3, color: "bg-gradient-to-br from-cyan-300 to-sky-700" },
+  { to: "/admin-menu", label: "Menu", icon: ChefHat, color: "bg-gradient-to-br from-orange-300 to-red-500" },
+  { to: "/admin-billing", label: "Billing", icon: ReceiptText, color: "bg-gradient-to-br from-amber-300 to-orange-600" },
+  { to: "/admin-notifications", label: "Alerts", icon: Flame, color: "bg-gradient-to-br from-rose-400 to-red-700" },
 ];
 
 export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: string }) {
@@ -48,6 +49,7 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
             <div className="text-[10px] text-muted-foreground">ADMIN</div>
           </div>
         </div>
+        <ThemeToggle />
         <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive" aria-label="Logout">
           <LogOut className="h-4 w-4" />
         </button>

@@ -1,18 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  ChefHat, ClipboardList, History, Bell, LogOut, Search, Settings, HelpCircle,
+  ChefHat, Clock3, Flame, LogOut, Search, Settings, HelpCircle,
   Plus,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { logout, getCurrentUser } from "@/lib/auth";
 import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Route = createFileRoute("/kitchen")({ component: Kitchen });
 
 const kitchenNav: BottomNavItem[] = [
-  { to: "/kitchen", label: "Live", icon: ClipboardList, color: "bg-orange-500" },
-  { to: "/kitchen-history", label: "History", icon: History, color: "bg-cyan-500" },
-  { to: "/kitchen-notifications", label: "Alerts", icon: Bell, color: "bg-rose-500" },
+  { to: "/kitchen", label: "Live", icon: ChefHat, color: "bg-gradient-to-br from-orange-300 to-red-500" },
+  { to: "/kitchen-history", label: "History", icon: Clock3, color: "bg-gradient-to-br from-cyan-300 to-sky-700" },
+  { to: "/kitchen-notifications", label: "Alerts", icon: Flame, color: "bg-gradient-to-br from-rose-400 to-red-700" },
 ];
 
 export function KitchenLayout({ children, title }: { children: ReactNode; title: string }) {
@@ -37,6 +38,7 @@ export function KitchenLayout({ children, title }: { children: ReactNode; title:
         </button>
         <Settings className="h-4 w-4 text-muted-foreground" />
         <HelpCircle className="hidden h-4 w-4 text-muted-foreground sm:block" />
+        <ThemeToggle />
         <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">● {user?.name ?? "Chef"}</span>
         <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive" aria-label="Logout">
           <LogOut className="h-4 w-4" />
