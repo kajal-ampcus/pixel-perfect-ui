@@ -71,6 +71,29 @@ export type MealSlot = {
   status: "expired" | "active" | "upcoming";
 };
 
+export type AdminSlot = {
+  id: string;
+  label: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  capacity: number;
+  occupied: number;
+  deadlineMinutes: number;
+  active: boolean;
+};
+
+export type NotificationTarget = "All Users" | "Kitchen" | "Admin";
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  message: string;
+  target: NotificationTarget;
+  read: boolean;
+  createdAt: string;
+};
+
 const STORAGE_KEY = "canteen.store.v2";
 
 type StoreShape = {
@@ -79,6 +102,8 @@ type StoreShape = {
   customers: Customer[];
   cart: CartItem[];
   walletBalance: number;
+  slots: AdminSlot[];
+  notifications: AppNotification[];
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
