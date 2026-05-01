@@ -395,19 +395,35 @@ function seedOrders(menu: MenuItem[], customers: Customer[]): Order[] {
   ];
 }
 
+function seedSlots(): AdminSlot[] {
+  return [
+    { id: uid(), label: "MORNING SESSION", name: "Breakfast", startTime: "07:00", endTime: "09:00", capacity: 40, occupied: 40, deadlineMinutes: 30, active: false },
+    { id: uid(), label: "PEAK SESSION", name: "Lunch", startTime: "12:00", endTime: "14:00", capacity: 150, occupied: 124, deadlineMinutes: 30, active: true },
+    { id: uid(), label: "LIGHT SESSION", name: "Evening Snacks", startTime: "16:30", endTime: "17:30", capacity: 50, occupied: 12, deadlineMinutes: 30, active: true },
+    { id: uid(), label: "EVENING SESSION", name: "Dinner", startTime: "19:30", endTime: "21:00", capacity: 100, occupied: 5, deadlineMinutes: 30, active: true },
+  ];
+}
+
+function seedNotifications(): AppNotification[] {
+  return [
+    { id: uid(), title: "System Online", message: "Canteen management system is now live.", target: "All Users", read: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
+  ];
+}
+
 function load(): StoreShape {
   if (typeof window === "undefined") {
     const customers = seedCustomers();
     const menu = seedMenu();
-    return { customers, menu, orders: seedOrders(menu, customers), cart: [], walletBalance: 2500 };
+    return { customers, menu, orders: seedOrders(menu, customers), cart: [], walletBalance: 2500, slots: seedSlots(), notifications: seedNotifications() };
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as StoreShape;
-      // Ensure cart exists (migration)
       if (!parsed.cart) parsed.cart = [];
       if (!parsed.walletBalance) parsed.walletBalance = 2500;
+      if (!parsed.slots) parsed.slots = seedSlots();
+      if (!parsed.notifications) parsed.notifications = seedNotifications();
       parsed.menu = parsed.menu.map((item) => ({
         ...item,
         slot: normalizeCompanySlot(item.slot),
@@ -443,6 +459,8 @@ function load(): StoreShape {
     orders: seedOrders(menu, customers),
     cart: [],
     walletBalance: 2500,
+    slots: seedSlots(),
+    notifications: seedNotifications(),
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
