@@ -807,6 +807,60 @@ export function downloadCSV(filename: string, rows: (string | number)[][]) {
   URL.revokeObjectURL(url);
 }
 
+// ----- Admin Slots -----
+export function listSlots(): AdminSlot[] {
+  return state.slots;
+}
+
+export function updateSlot(id: string, patch: Partial<AdminSlot>): void {
+  state = { ...state, slots: state.slots.map((s) => (s.id === id ? { ...s, ...patch } : s)) };
+  persist();
+  emit();
+}
+
+export function createSlot(input: Omit<AdminSlot, "id">): AdminSlot {
+  const slot: AdminSlot = { id: uid(), ...input };
+  state = { ...state, slots: [...state.slots, slot] };
+  persist();
+  emit();
+  return slot;
+}
+
+// ----- Notifications -----
+export function listNotifications(): AppNotification[] {
+  return state.notifications;
+}
+
+export function createNotification(input: Omit<AppNotification, "id" | "createdAt" | "read">): AppNotification {
+  const n: AppNotification = { id: uid(), read: false, createdAt: new Date().toISOString(), ...input };
+  state = { ...state, notifications: [n, ...state.notifications] };
+  persist();
+  emit();
+  return n;
+}
+
+export function markNotificationRead(id: string): void {
+  state = { ...state, notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) };
+  persist();
+  emit();
+}
+
+export function markAllNotificationsRead(): void {
+  state = { ...state, notifications: state.notifications.map((n) => ({ ...n, read: true })) };
+  persist();
+  emit();
+}
+
+export function getUnreadNotificationCount(): number {
+  return state.notifications.filter((n) => !n.read).length;
+}
+
+export function deleteNotification(id: string): void {
+  state = { ...state, notifications: state.notifications.filter((n) => n.id !== id) };
+  persist();
+  emit();
+}
+
 export function resetStore() {
   if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY);
   state = load();
