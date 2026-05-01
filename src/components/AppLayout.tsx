@@ -87,7 +87,7 @@ export function AppLayout({
             </button>
 
             <button
-              onClick={() => navigate({ to: "/orders" })}
+              onClick={() => navigate({ to: "/cart" })}
               className="relative rounded-xl p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <ShoppingCart className="h-5 w-5" />

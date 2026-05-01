@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { IndianRupee, ShoppingBag, Sparkles, TrendingUp } from "lucide-react";
 import { CategoryChartType } from "igniteui-react-charts";
-import { IgniteCategoryChartCard, IgniteDonutChartCard } from "@/components/charts/IgniteDashboardCharts";
+import {
+  IgniteCategoryChartCard,
+  IgniteDonutChartCard,
+} from "@/components/charts/IgniteDashboardCharts";
 import { AdminLayout } from "./admin-orders";
 import { useStore, formatINR, type OrderStatus } from "@/lib/store";
 
@@ -20,8 +23,18 @@ function Admin() {
   const todayRevenue = todays.reduce((sum, order) => sum + order.total, 0);
 
   const stats = [
-    { icon: ShoppingBag, label: "Today's Orders", value: String(todays.length), color: "text-primary" },
-    { icon: IndianRupee, label: "Today's Revenue", value: formatINR(todayRevenue), color: "text-success" },
+    {
+      icon: ShoppingBag,
+      label: "Today's Orders",
+      value: String(todays.length),
+      color: "text-primary",
+    },
+    {
+      icon: IndianRupee,
+      label: "Today's Revenue",
+      value: formatINR(todayRevenue),
+      color: "text-success",
+    },
   ];
 
   const live = useMemo(
@@ -32,7 +45,6 @@ function Admin() {
   const liveByStatus = useMemo(() => {
     const tally: Record<OrderStatus, number> = {
       Pending: 0,
-      Accepted: 0,
       Preparing: 0,
       Ready: 0,
       Delivered: 0,
@@ -64,7 +76,7 @@ function Admin() {
   }, [orders]);
 
   const slotCounts = useMemo(() => {
-    const slots = ["Breakfast", "Lunch", "Snacks", "Dinner"];
+    const slots = ["Snacks", "Dinner", "Late Night Snacks"];
     const tally = Object.fromEntries(slots.map((slot) => [slot, 0])) as Record<string, number>;
 
     for (const order of orders) {
@@ -99,7 +111,9 @@ function Admin() {
               className="rounded-[28px] border border-border bg-card p-5 shadow-[0_20px_40px_-28px_rgba(0,0,0,0.22)]"
             >
               <div className="flex items-start justify-between">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-muted ${stat.color}`}>
+                <div
+                  className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-muted ${stat.color}`}
+                >
                   <stat.icon className="h-5 w-5" />
                 </div>
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-primary">
@@ -120,7 +134,9 @@ function Admin() {
               <div>
                 <div className="flex items-center gap-2 text-primary">
                   <Sparkles className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-[0.24em]">Demand Pulse</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.24em]">
+                    Demand Pulse
+                  </span>
                 </div>
                 <h2 className="mt-2 text-xl font-black tracking-tight">Order Volume by Slot</h2>
                 <p className="text-sm text-muted-foreground">
@@ -132,7 +148,12 @@ function Admin() {
                   Peak Window
                 </div>
                 <div className="mt-1 text-lg font-black text-[#2c1a0e]">
-                  {slotCounts.reduce((best, current) => (current.orders > best.orders ? current : best), slotCounts[0]).slot}
+                  {
+                    slotCounts.reduce(
+                      (best, current) => (current.orders > best.orders ? current : best),
+                      slotCounts[0],
+                    ).slot
+                  }
                 </div>
               </div>
             </div>
@@ -246,7 +267,9 @@ function Admin() {
                     <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                       Rank {index + 1}
                     </div>
-                    <div className="mt-1 line-clamp-1 text-sm font-bold text-[#2c1a0e]">{item.name}</div>
+                    <div className="mt-1 line-clamp-1 text-sm font-bold text-[#2c1a0e]">
+                      {item.name}
+                    </div>
                     <div className="mt-1 text-xl font-black text-primary">{item.qty}</div>
                   </div>
                 ))}

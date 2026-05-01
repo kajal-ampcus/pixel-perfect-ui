@@ -1,16 +1,42 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { Sun, Sunrise, Moon, Plus, Minus, Search, Filter, Leaf, Drumstick, Coffee, Star, Clock, Check } from "lucide-react";
-import { useStore, formatINR, addToCart, getMealSlots, type MenuItem, type ItemCategory } from "@/lib/store";
+import {
+  Sun,
+  Sunrise,
+  Moon,
+  Plus,
+  Minus,
+  Search,
+  Leaf,
+  Drumstick,
+  Coffee,
+  Star,
+  Clock,
+  Check,
+  ShoppingCart,
+} from "lucide-react";
+import {
+  useStore,
+  formatINR,
+  addToCart,
+  getAvailableMealSlots,
+  getMealSlots,
+  updateCartItemQty,
+  removeFromCart,
+  type MenuItem,
+  type ItemCategory,
+} from "@/lib/store";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/menu")({ component: Menu });
 
 function Menu() {
+  const navigate = useNavigate();
   const menu = useStore((s) => s.menu);
   const cart = useStore((s) => s.cart);
   const mealSlots = getMealSlots();
+  const availableMealSlots = getAvailableMealSlots();
   const [selectedCategory, setSelectedCategory] = useState<ItemCategory | "All">("All");
   const [selectedSlot, setSelectedSlot] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,12 +47,20 @@ function Menu() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (selectedSlot !== "All" && !availableMealSlots.some((slot) => slot.name === selectedSlot)) {
+      setSelectedSlot("All");
+    }
+  }, [availableMealSlots, selectedSlot]);
+
   // Get active slot
   const activeSlot = mealSlots.find((s) => s.status === "active");
+  const availableSlotNames = new Set(availableMealSlots.map((slot) => slot.name));
 
   // Filter menu items
   const filteredMenu = menu.filter((item) => {
     if (!item.live) return false;
+    if (!availableSlotNames.has(item.slot)) return false;
     if (selectedCategory !== "All" && item.category !== selectedCategory) return false;
     if (selectedSlot !== "All" && item.slot !== selectedSlot) return false;
     if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -34,11 +68,14 @@ function Menu() {
   });
 
   // Group by slot
-  const menuBySlot = filteredMenu.reduce((acc, item) => {
-    if (!acc[item.slot]) acc[item.slot] = [];
-    acc[item.slot].push(item);
-    return acc;
-  }, {} as Record<string, MenuItem[]>);
+  const menuBySlot = filteredMenu.reduce(
+    (acc, item) => {
+      if (!acc[item.slot]) acc[item.slot] = [];
+      acc[item.slot].push(item);
+      return acc;
+    },
+    {} as Record<string, MenuItem[]>,
+  );
 
   const categories: { value: ItemCategory | "All"; label: string; icon: typeof Leaf }[] = [
     { value: "All", label: "All Items", icon: Star },
@@ -52,6 +89,7 @@ function Menu() {
       itemId: item.id,
       name: item.name,
       price: item.price,
+      slot: item.slot,
       image: item.image,
     });
 
@@ -79,6 +117,7 @@ function Menu() {
   const getSlotIcon = (slot: string) => {
     if (slot.toLowerCase().includes("breakfast")) return Sunrise;
     if (slot.toLowerCase().includes("lunch")) return Sun;
+    if (slot.toLowerCase().includes("snack")) return Coffee;
     return Moon;
   };
 
@@ -97,7 +136,9 @@ function Menu() {
 
   return (
     <AppLayout title="Menu">
-      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div
+        className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}
+      >
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -109,10 +150,10 @@ function Menu() {
                     <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                     {activeSlot.name} is open now
                   </span>
-                  {" • "}Closes at {activeSlot.endTime}
+                  {" - "}Closes at {activeSlot.endTime}
                 </>
               ) : (
-                "Check available slots for ordering"
+                "Showing active and upcoming slots only"
               )}
             </p>
           </div>
@@ -140,21 +181,27 @@ function Menu() {
             return (
               <button
                 key={slot.id}
+                disabled={isExpired}
                 onClick={() => setSelectedSlot(selectedSlot === slot.name ? "All" : slot.name)}
                 className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
                   selectedSlot === slot.name
                     ? "bg-primary text-white shadow-lg shadow-primary/30"
                     : isActive
-                    ? "border-2 border-primary bg-primary/10 text-primary"
-                    : isExpired
-                    ? "border border-border bg-muted/50 text-muted-foreground"
-                    : "border border-border bg-card text-foreground hover:border-primary/50"
+                      ? "border-2 border-primary bg-primary/10 text-primary"
+                      : isExpired
+                        ? "cursor-not-allowed border border-border bg-muted/40 text-muted-foreground opacity-60"
+                        : "border border-border bg-card text-foreground hover:border-primary/50"
                 }`}
               >
                 <SlotIcon className="h-4 w-4" />
                 <span>{slot.name}</span>
                 {isActive && selectedSlot !== slot.name && (
                   <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                )}
+                {isExpired && (
+                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold">
+                    CLOSED
+                  </span>
                 )}
               </button>
             );
@@ -184,8 +231,8 @@ function Menu() {
           <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
             <Clock className="h-5 w-5 text-primary" />
             <p className="text-sm">
-              <span className="font-semibold text-primary">Ordering Tip:</span>{" "}
-              Orders must be placed 30 minutes before the slot ends for same-slot pickup.
+              <span className="font-semibold text-primary">Ordering Tip:</span> Orders must be
+              placed 30 minutes before the slot ends for same-slot pickup.
             </p>
           </div>
         )}
@@ -231,7 +278,10 @@ function Menu() {
                       {/* Image */}
                       <div className="relative h-44 overflow-hidden">
                         <img
-                          src={item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"}
+                          src={
+                            item.image ||
+                            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"
+                          }
                           alt={item.name}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
@@ -270,7 +320,9 @@ function Menu() {
 
                       {/* Content */}
                       <div className="p-4">
-                        <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
+                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                          {item.description}
+                        </p>
 
                         {/* Add to cart */}
                         <div className="mt-4">
@@ -279,16 +331,8 @@ function Menu() {
                               <button
                                 onClick={() => {
                                   const newQty = qty - 1;
-                                  if (newQty <= 0) {
-                                    // Remove from cart
-                                    import("@/lib/store").then(({ removeFromCart }) => {
-                                      removeFromCart(item.id);
-                                    });
-                                  } else {
-                                    import("@/lib/store").then(({ updateCartItemQty }) => {
-                                      updateCartItemQty(item.id, newQty);
-                                    });
-                                  }
+                                  if (newQty <= 0) removeFromCart(item.id);
+                                  else updateCartItemQty(item.id, newQty);
                                 }}
                                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-primary shadow-sm transition-colors hover:bg-primary hover:text-white"
                               >
@@ -332,6 +376,30 @@ function Menu() {
               </div>
             </div>
           ))
+        )}
+
+        {cart.length > 0 && (
+          <div className="sticky bottom-24 z-20 rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-black/10">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <ShoppingCart className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold">Cart ready</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {cart.reduce((sum, item) => sum + item.qty, 0)} items added across slots
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate({ to: "/cart" })}
+                className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:shadow-primary/40"
+              >
+                View Cart
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </AppLayout>

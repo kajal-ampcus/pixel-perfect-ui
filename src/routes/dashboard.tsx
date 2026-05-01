@@ -16,7 +16,14 @@ import {
   Moon,
   Utensils,
 } from "lucide-react";
-import { useStore, formatINR, getActiveOrder, getOrderStats, getMealSlots, type Order } from "@/lib/store";
+import {
+  useStore,
+  formatINR,
+  getActiveOrder,
+  getOrderStats,
+  getMealSlots,
+  type Order,
+} from "@/lib/store";
 import { getCurrentUser } from "@/lib/auth";
 import { useEffect, useState } from "react";
 
@@ -74,8 +81,15 @@ function Dashboard() {
   };
 
   const getStatusSteps = (order: Order) => {
-    const allSteps = ["Pending", "Accepted", "Preparing", "Ready", "Collected"];
-    const currentIndex = allSteps.findIndex((s) => s === order.status || (order.status === "Delivered" && s === "Collected"));
+    const allSteps = ["Order Placed", "Preparing", "Ready to Pick", "Delivered"];
+    const statusMap: Record<string, number> = {
+      Pending: 0,
+      Preparing: 1,
+      Ready: 2,
+      Delivered: 3,
+      Completed: 3,
+    };
+    const currentIndex = statusMap[order.status] ?? 0;
 
     return allSteps.map((label, index) => ({
       label,
@@ -94,7 +108,9 @@ function Dashboard() {
 
   return (
     <AppLayout>
-      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div
+        className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}
+      >
         {/* Hero Section */}
         <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
           {/* Greeting Card */}
@@ -192,8 +208,8 @@ function Dashboard() {
                         step.current
                           ? "bg-primary text-white ring-4 ring-primary/20 scale-110"
                           : step.done
-                          ? "bg-primary text-white"
-                          : "bg-muted text-muted-foreground"
+                            ? "bg-primary text-white"
+                            : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {step.current ? (
@@ -227,7 +243,8 @@ function Dashboard() {
                 <div>
                   <p className="font-medium">{activeOrder.items.map((i) => i.name).join(", ")}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {activeOrder.slot} • {activeOrder.items.reduce((sum, i) => sum + i.qty, 0)} items
+                    {activeOrder.slot} • {activeOrder.items.reduce((sum, i) => sum + i.qty, 0)}{" "}
+                    items
                   </p>
                 </div>
                 <div className="text-right">
@@ -258,8 +275,8 @@ function Dashboard() {
                     isActive
                       ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
                       : isExpired
-                      ? "border-border bg-muted/30"
-                      : "border-border bg-card hover:border-primary/50"
+                        ? "border-border bg-muted/40 opacity-60"
+                        : "border-border bg-card hover:border-primary/50"
                   }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -270,8 +287,8 @@ function Dashboard() {
                         isActive
                           ? "bg-primary text-white"
                           : isExpired
-                          ? "bg-muted text-muted-foreground"
-                          : "bg-info/15 text-info"
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-info/15 text-info"
                       }`}
                     >
                       <SlotIcon className="h-5 w-5" />
@@ -281,8 +298,8 @@ function Dashboard() {
                         isActive
                           ? "bg-primary text-white"
                           : isExpired
-                          ? "bg-muted text-muted-foreground"
-                          : "bg-info/15 text-info"
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-info/15 text-info"
                       }`}
                     >
                       {isActive ? "OPEN NOW" : isExpired ? "EXPIRED" : "UPCOMING"}
@@ -302,17 +319,17 @@ function Dashboard() {
                   )}
 
                   <button
-                    onClick={() => !isExpired && navigate({ to: "/menu" })}
                     disabled={isExpired}
+                    onClick={() => navigate({ to: "/menu" })}
                     className={`mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${
                       isActive
                         ? "bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40"
                         : isExpired
-                        ? "bg-muted text-muted-foreground cursor-not-allowed"
-                        : "border border-border bg-card text-foreground hover:bg-muted"
+                          ? "cursor-not-allowed border border-border bg-muted text-muted-foreground"
+                          : "border border-border bg-card text-foreground hover:bg-muted"
                     }`}
                   >
-                    {isActive ? "Order Now" : isExpired ? "Slot Closed" : "Pre-order"}
+                    {isActive ? "Order Now" : isExpired ? "Closed" : "Pre-order"}
                   </button>
                 </div>
               );
@@ -360,7 +377,9 @@ function Dashboard() {
                   <div className="p-4">
                     <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary">{formatINR(item.price)}</span>
+                      <span className="text-lg font-bold text-primary">
+                        {formatINR(item.price)}
+                      </span>
                       <button
                         onClick={() => navigate({ to: "/menu" })}
                         className="rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
@@ -448,11 +467,11 @@ function StatCard({
         <Icon className="h-5 w-5" />
       </div>
       <div className="flex-1">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {label}
+        </p>
         <p className="mt-0.5 text-xl font-bold">{value}</p>
-        {trend && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{trend}</p>
-        )}
+        {trend && <p className="mt-0.5 text-xs text-muted-foreground">{trend}</p>}
       </div>
     </div>
   );

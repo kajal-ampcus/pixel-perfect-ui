@@ -1,25 +1,54 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  ChefHat, Clock3, Flame, LogOut, Search, Settings, HelpCircle,
-  Plus,
+  ChefHat,
+  Clock3,
+  Flame,
+  LogOut,
+  Search,
+  Settings,
+  HelpCircle,
+  Package,
+  CheckCircle2,
+  UtensilsCrossed,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { logout, getCurrentUser } from "@/lib/auth";
 import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { formatINR, updateOrderStatus, useStore, type Order, type OrderStatus } from "@/lib/store";
 
 export const Route = createFileRoute("/kitchen")({ component: Kitchen });
 
 const kitchenNav: BottomNavItem[] = [
-  { to: "/kitchen", label: "Live", icon: ChefHat, color: "bg-gradient-to-br from-orange-300 to-red-500" },
-  { to: "/kitchen-history", label: "History", icon: Clock3, color: "bg-gradient-to-br from-cyan-300 to-sky-700" },
-  { to: "/kitchen-notifications", label: "Alerts", icon: Flame, color: "bg-gradient-to-br from-rose-400 to-red-700" },
+  {
+    to: "/kitchen",
+    label: "Live",
+    icon: ChefHat,
+    color: "bg-gradient-to-br from-orange-300 to-red-500",
+  },
+  {
+    to: "/kitchen-history",
+    label: "History",
+    icon: Clock3,
+    color: "bg-gradient-to-br from-cyan-300 to-sky-700",
+  },
+  {
+    to: "/kitchen-notifications",
+    label: "Alerts",
+    icon: Flame,
+    color: "bg-gradient-to-br from-rose-400 to-red-700",
+  },
 ];
 
 export function KitchenLayout({ children, title }: { children: ReactNode; title: string }) {
   const navigate = useNavigate();
   const user = typeof window !== "undefined" ? getCurrentUser() : null;
-  const handleLogout = () => { logout(); navigate({ to: "/login" }); };
+  const handleLogout = () => {
+    logout();
+    navigate({ to: "/login" });
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/60 px-4 backdrop-blur sm:px-6 lg:px-8">
@@ -27,20 +56,26 @@ export function KitchenLayout({ children, title }: { children: ReactNode; title:
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <ChefHat className="h-4 w-4" />
           </div>
-          <div className="hidden sm:block text-sm font-semibold leading-tight">{title}</div>
+          <div className="hidden text-sm font-semibold leading-tight sm:block">{title}</div>
         </div>
         <div className="relative mx-auto hidden max-w-md flex-1 md:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input placeholder="Search orders, items, or staff..." className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary" />
+          <input
+            placeholder="Search orders, items, or staff..."
+            className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary"
+          />
         </div>
-        <button className="ml-auto hidden items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground sm:flex">
-          <Plus className="h-3 w-3" /> Manual Order
-        </button>
-        <Settings className="h-4 w-4 text-muted-foreground" />
+        <Settings className="ml-auto h-4 w-4 text-muted-foreground" />
         <HelpCircle className="hidden h-4 w-4 text-muted-foreground sm:block" />
         <ThemeToggle />
-        <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">● {user?.name ?? "Chef"}</span>
-        <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive" aria-label="Logout">
+        <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">
+          {user?.name ?? "Chef"}
+        </span>
+        <button
+          onClick={handleLogout}
+          className="text-muted-foreground hover:text-destructive"
+          aria-label="Logout"
+        >
           <LogOut className="h-4 w-4" />
         </button>
       </header>
@@ -51,117 +86,250 @@ export function KitchenLayout({ children, title }: { children: ReactNode; title:
 }
 
 function Kitchen() {
-  const orders = [
-    { id: "#ORD-9601", emp: "Jane Diaz", station: "Hot Deli", item: "2x Wagyu Burger, 1x Truffle Fries", time: "04:32", status: "NEW", statusColor: "bg-destructive text-destructive-foreground", action: "Preparing" },
-    { id: "#ORD-9598", emp: "Marcus Smets", station: "Salad Bar", item: "1x Quinoa Bowl (Side of Beets)", time: "05:48", status: "PREPARING", statusColor: "bg-primary text-primary-foreground", action: "Ready" },
-    { id: "#ORD-9592", emp: "Linda Chen", station: "Beverages", item: "3x Iced Latte, 1x Espresso", time: "12:15", status: "COMPLETED", statusColor: "bg-emerald-600 text-white", action: "Print Receipt" },
-    { id: "#ORD-9587", emp: "Tobi Andrej", station: "Hot Deli", item: "1x Ribeye Steak (Medium)", time: "07:30", status: "NEW", statusColor: "bg-destructive text-destructive-foreground", action: "Preparing" },
-  ];
+  const allOrders = useStore((s) => s.orders);
+  const user = typeof window !== "undefined" ? getCurrentUser() : null;
+  const [now, setNow] = useState(new Date());
 
-  const stations = [
-    { name: "Hot Grill", load: "100%", color: "bg-destructive" },
-    { name: "Salad Bar", load: "45m", color: "bg-warning" },
-    { name: "Beverages", load: "38%", color: "bg-emerald-500" },
-    { name: "Oven Station", load: "76m", color: "bg-primary", highlight: true },
-  ];
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const orders = useMemo(
+    () =>
+      allOrders
+        .filter((order) => ["Pending", "Preparing", "Ready"].includes(order.status))
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+    [allOrders],
+  );
+
+  if (user?.role && user.role !== "kitchen") {
+    return (
+      <KitchenLayout title="Kitchen Access">
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <h1 className="text-xl font-bold">Kitchen dashboard is restricted</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Only kitchen staff can update order preparation status.
+          </p>
+        </div>
+      </KitchenLayout>
+    );
+  }
+
+  const counts = {
+    placed: orders.filter((order) => order.status === "Pending").length,
+    preparing: orders.filter((order) => order.status === "Preparing").length,
+    ready: orders.filter((order) => order.status === "Ready").length,
+  };
 
   return (
-    <KitchenLayout title="Live Orders · Hot prep window: 8m">
-      <div className="grid gap-4 lg:grid-cols-[3fr_1fr]">
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border p-4">
-            <div>
-              <div className="font-semibold">Live Orders</div>
-              <div className="text-xs text-muted-foreground">Monitoring – Active preparation flow</div>
-            </div>
-            <div className="flex gap-2 text-xs">
-              <span className="rounded-md bg-destructive px-3 py-1 font-semibold text-destructive-foreground">4 URGENT</span>
-              <span className="rounded-md bg-muted px-3 py-1 font-semibold">12 TOTAL</span>
-            </div>
-          </div>
-          <div className="divide-y divide-border md:hidden">
-            {orders.map((o) => (
-              <div key={o.id} className="space-y-3 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs font-semibold text-primary">{o.id}</div>
-                    <div className="mt-1 text-sm font-semibold">{o.emp}</div>
-                    <div className="text-xs text-muted-foreground">{o.station}</div>
-                  </div>
-                  <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${o.statusColor}`}>{o.status}</span>
-                </div>
-                <div className="text-xs">{o.item}</div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-xs text-muted-foreground">{o.time}</span>
-                  <button className="rounded-md bg-primary px-3 py-1.5 text-[10px] font-bold text-primary-foreground">
-                    {o.action}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <table className="hidden w-full text-sm md:table">
-            <thead>
-              <tr className="border-b border-border bg-muted/30 text-left text-[10px] tracking-wider text-muted-foreground">
-                <th className="px-3 py-2">ORDER ID</th>
-                <th className="px-3 py-2">EMPLOYEE</th>
-                <th className="px-3 py-2">STATION</th>
-                <th className="px-3 py-2">ITEMS</th>
-                <th className="px-3 py-2">TOTAL TIME</th>
-                <th className="px-3 py-2">STATUS</th>
-                <th className="px-3 py-2">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr key={o.id} className="border-b border-border/60 last:border-0">
-                  <td className="px-3 py-3 text-xs text-primary">{o.id}</td>
-                  <td className="px-3 py-3"><div className="flex items-center gap-2"><div className="h-6 w-6 rounded-full bg-gradient-to-br from-primary to-amber-700" />{o.emp}</div></td>
-                  <td className="px-3 py-3 text-muted-foreground">{o.station}</td>
-                  <td className="px-3 py-3 text-xs">{o.item}</td>
-                  <td className="px-3 py-3 font-mono text-xs">{o.time}</td>
-                  <td className="px-3 py-3"><span className={`rounded px-2 py-0.5 text-[10px] font-bold ${o.statusColor}`}>{o.status}</span></td>
-                  <td className="px-3 py-3"><button className="rounded-md bg-primary px-3 py-1 text-[10px] font-bold text-primary-foreground">{o.action}</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Right panel */}
-        <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="text-[10px] tracking-widest text-muted-foreground">TOTAL PREP TIME</div>
-            <div className="text-2xl font-bold text-primary">14:25 <span className="text-xs text-muted-foreground">MINS</span></div>
-            <div className="mt-3 text-[10px] tracking-widest text-muted-foreground">CURRENT LOAD</div>
-            <div className="mt-1 h-2 rounded-full bg-muted">
-              <div className="h-2 w-[84%] rounded-full bg-primary" />
-            </div>
-            <div className="mt-1 text-xs font-bold">84%</div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 text-sm font-semibold">Station Status</div>
-            <div className="space-y-2">
-              {stations.map((s) => (
-                <div key={s.name} className={`flex items-center justify-between rounded-md border p-2 text-xs ${s.highlight ? "border-primary bg-primary/10" : "border-border"}`}>
-                  <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${s.color}`} />
-                    <div>
-                      <div className="font-semibold">{s.name}</div>
-                      <div className="text-[10px] text-muted-foreground">Active</div>
-                    </div>
-                  </div>
-                  <span className="font-mono">{s.load}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+    <KitchenLayout title="Live Orders">
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <KitchenStat label="Order Placed" value={counts.placed} icon={Package} />
+        <KitchenStat label="Preparing" value={counts.preparing} icon={UtensilsCrossed} />
+        <KitchenStat label="Ready to Pick" value={counts.ready} icon={CheckCircle2} />
       </div>
 
-      <button className="fixed bottom-24 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg sm:right-6">
-        <Plus className="h-5 w-5" />
-      </button>
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="font-semibold">Live Orders</div>
+            <div className="text-xs text-muted-foreground">
+              Auto-refreshing from employee orders and cancellations
+            </div>
+          </div>
+          <div className="flex gap-2 text-xs">
+            <span className="rounded-md bg-primary/15 px-3 py-1 font-semibold text-primary">
+              {orders.length} ACTIVE
+            </span>
+            <span className="rounded-md bg-muted px-3 py-1 font-semibold">
+              UPDATED {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
+        </div>
+
+        {orders.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <ChefHat className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h3 className="mt-4 font-semibold">No active orders</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              New employee orders will appear here automatically.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="divide-y divide-border md:hidden">
+              {orders.map((order) => (
+                <KitchenOrderCard key={order.id} order={order} now={now} />
+              ))}
+            </div>
+
+            <table className="hidden w-full text-sm md:table">
+              <thead>
+                <tr className="border-b border-border bg-muted/30 text-left text-[10px] tracking-wider text-muted-foreground">
+                  <th className="px-3 py-2">ORDER ID</th>
+                  <th className="px-3 py-2">EMPLOYEE</th>
+                  <th className="px-3 py-2">SLOT</th>
+                  <th className="px-3 py-2">ITEMS</th>
+                  <th className="px-3 py-2">TOTAL TIME</th>
+                  <th className="px-3 py-2">TOTAL</th>
+                  <th className="px-3 py-2">STATUS</th>
+                  <th className="px-3 py-2">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => {
+                  const next = nextStatus(order.status);
+                  return (
+                    <tr key={order.id} className="border-b border-border/60 last:border-0">
+                      <td className="px-3 py-3 text-xs text-primary">{order.orderNumber}</td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary to-amber-700 text-[9px] font-bold text-white">
+                            {initials(order.customerName)}
+                          </div>
+                          {order.customerName}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-muted-foreground">{order.slot}</td>
+                      <td className="px-3 py-3 text-xs">{orderItems(order)}</td>
+                      <td className="px-3 py-3 font-mono text-xs">{elapsed(order, now)}</td>
+                      <td className="px-3 py-3 text-xs font-semibold">{formatINR(order.total)}</td>
+                      <td className="px-3 py-3">
+                        <span
+                          className={`rounded px-2 py-0.5 text-[10px] font-bold ${statusColor(order.status)}`}
+                        >
+                          {statusLabel(order.status)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <button
+                          disabled={!next}
+                          onClick={() => next && updateOrderStatus(order.id, next)}
+                          className="rounded-md bg-primary px-3 py-1 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
+                        >
+                          {actionLabel(order.status)}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
     </KitchenLayout>
   );
+}
+
+function KitchenOrderCard({ order, now }: { order: Order; now: Date }) {
+  const next = nextStatus(order.status);
+  return (
+    <div className="space-y-3 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold text-primary">{order.orderNumber}</div>
+          <div className="mt-1 text-sm font-semibold">{order.customerName}</div>
+          <div className="text-xs text-muted-foreground">
+            {order.department} - {order.slot}
+          </div>
+        </div>
+        <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${statusColor(order.status)}`}>
+          {statusLabel(order.status)}
+        </span>
+      </div>
+      <div className="text-xs">{orderItems(order)}</div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-mono text-xs text-muted-foreground">{elapsed(order, now)}</span>
+        <button
+          disabled={!next}
+          onClick={() => next && updateOrderStatus(order.id, next)}
+          className="rounded-md bg-primary px-3 py-1.5 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
+        >
+          {actionLabel(order.status)}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function KitchenStat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  icon: typeof Package;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+          <div className="mt-2 text-3xl font-bold text-primary">{value}</div>
+        </div>
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/15 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function elapsed(order: Order, now: Date) {
+  const diff = Math.max(0, now.getTime() - new Date(order.createdAt).getTime());
+  const mins = Math.floor(diff / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function orderItems(order: Order) {
+  return order.items.map((item) => `${item.qty}x ${item.name}`).join(", ");
+}
+
+function statusLabel(status: OrderStatus) {
+  return status === "Pending"
+    ? "ORDER PLACED"
+    : status === "Ready"
+      ? "READY TO PICK"
+      : status.toUpperCase();
+}
+
+function statusColor(status: OrderStatus) {
+  return status === "Pending"
+    ? "bg-warning/20 text-warning"
+    : status === "Preparing"
+      ? "bg-primary/15 text-primary"
+      : "bg-success/15 text-success";
+}
+
+function nextStatus(status: OrderStatus): OrderStatus | null {
+  return status === "Pending"
+    ? "Preparing"
+    : status === "Preparing"
+      ? "Ready"
+      : status === "Ready"
+        ? "Delivered"
+        : null;
+}
+
+function actionLabel(status: OrderStatus) {
+  return status === "Pending"
+    ? "Start Preparing"
+    : status === "Preparing"
+      ? "Mark Ready"
+      : "Mark Delivered";
 }

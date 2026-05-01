@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin-menu")({ component: AdminMenu });
 
 const TABS: Array<"All" | ItemCategory> = ["All", "Veg", "Non-Veg", "Beverages"];
-const SLOTS = ["Breakfast", "Lunch", "Snacks", "Dinner"] as const;
+const SLOTS = ["Snacks", "Dinner", "Late Night Snacks"] as const;
 
 function AdminMenu() {
   const items = useStore((s) => s.menu);
@@ -149,7 +149,7 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
   const [price, setPrice] = useState<string>(initial ? String(initial.price) : "");
   const [category, setCategory] = useState<ItemCategory>(initial?.category ?? "Veg");
   const [type, setType] = useState<ItemType>(initial?.type ?? "Meal");
-  const [slot, setSlot] = useState<string>(initial?.slot ?? "Lunch");
+  const [slot, setSlot] = useState<string>(initial?.slot ?? "Snacks");
   const [days, setDays] = useState<Day[]>(initial?.days ?? [...ALL_DAYS]);
   const [image, setImage] = useState<string | undefined>(initial?.image);
   const [tag, setTag] = useState<string>(initial?.tag ?? "");

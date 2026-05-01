@@ -3,15 +3,12 @@ import { AppLayout } from "@/components/AppLayout";
 import {
   Check,
   Wallet,
-  AlertTriangle,
-  Info,
   UtensilsCrossed,
   Bell,
   BellOff,
   Trash2,
   Clock,
   Gift,
-  Sparkles,
   ChevronRight,
 } from "lucide-react";
 import { useStore, formatINR, getActiveOrder } from "@/lib/store";
@@ -54,7 +51,10 @@ function Notifications() {
       dynamicNotifications.push({
         id: "active-order",
         type: "order",
-        title: activeOrder.status === "Ready" ? "Order Ready for Pickup!" : `Order ${activeOrder.status}`,
+        title:
+          activeOrder.status === "Ready"
+            ? "Order Ready for Pickup!"
+            : `Order ${activeOrder.status}`,
         body:
           activeOrder.status === "Ready"
             ? `Your order ${activeOrder.orderNumber} (${activeOrder.items.map((i) => i.name).join(", ")}) is ready! Please collect from the counter.`
@@ -90,26 +90,13 @@ function Notifications() {
       title: walletBalance < 500 ? "Low Wallet Balance" : "Wallet Balance Update",
       body:
         walletBalance < 500
-          ? `Your wallet balance is low (${formatINR(walletBalance)}). Add funds to continue ordering without interruption.`
+          ? `Your wallet balance is low (${formatINR(walletBalance)}). Please contact Admin for wallet top-up.`
           : `Your current wallet balance is ${formatINR(walletBalance)}. You're all set for your next meal!`,
       time: new Date(Date.now() - 60 * 60000),
       read: walletBalance >= 500,
       actionable: walletBalance < 500,
-      actionText: "Add Funds",
+      actionText: "View Wallet",
       actionRoute: "/wallet",
-    });
-
-    // System notifications
-    dynamicNotifications.push({
-      id: "system-1",
-      type: "system",
-      title: "New Menu Items Available",
-      body: "Check out our new additions! Fresh seasonal items have been added to the lunch menu. Don't miss the Chef's Special dishes.",
-      time: new Date(Date.now() - 3 * 60 * 60000),
-      read: false,
-      actionable: true,
-      actionText: "Browse Menu",
-      actionRoute: "/menu",
     });
 
     // Promo notification
@@ -119,15 +106,6 @@ function Notifications() {
       title: "Weekend Special Offer!",
       body: "Get 20% off on all orders above ₹500 this weekend. Use code: WEEKEND20 at checkout. Valid until Sunday midnight.",
       time: new Date(Date.now() - 5 * 60 * 60000),
-      read: true,
-    });
-
-    dynamicNotifications.push({
-      id: "system-2",
-      type: "system",
-      title: "Ordering Hours Extended",
-      body: "Great news! Dinner slot ordering hours have been extended till 10:00 PM. Now you have more time to place your orders.",
-      time: new Date(Date.now() - 24 * 60 * 60000),
       read: true,
     });
 
@@ -155,8 +133,6 @@ function Notifications() {
         return UtensilsCrossed;
       case "wallet":
         return Wallet;
-      case "system":
-        return Info;
       case "promo":
         return Gift;
       default:
@@ -170,8 +146,6 @@ function Notifications() {
         return "bg-primary/15 text-primary";
       case "wallet":
         return "bg-success/15 text-success";
-      case "system":
-        return "bg-info/15 text-info";
       case "promo":
         return "bg-warning/15 text-warning";
       default:
@@ -191,14 +165,23 @@ function Notifications() {
 
   const filters = [
     { value: "all" as const, label: "All", count: notifications.length },
-    { value: "order" as const, label: "Orders", count: notifications.filter((n) => n.type === "order").length },
-    { value: "wallet" as const, label: "Wallet", count: notifications.filter((n) => n.type === "wallet").length },
-    { value: "system" as const, label: "System", count: notifications.filter((n) => n.type === "system").length },
+    {
+      value: "order" as const,
+      label: "Orders",
+      count: notifications.filter((n) => n.type === "order").length,
+    },
+    {
+      value: "wallet" as const,
+      label: "Wallet",
+      count: notifications.filter((n) => n.type === "wallet").length,
+    },
   ];
 
   return (
     <AppLayout title="Notifications">
-      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div
+        className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}
+      >
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -299,7 +282,9 @@ function Notifications() {
                       {notification.actionable && (
                         <div className="mt-4 flex items-center gap-3">
                           <button
-                            onClick={() => notification.actionRoute && navigate({ to: notification.actionRoute })}
+                            onClick={() =>
+                              notification.actionRoute && navigate({ to: notification.actionRoute })
+                            }
                             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/30 transition-all hover:shadow-primary/40"
                           >
                             {notification.actionText}

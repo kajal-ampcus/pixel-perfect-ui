@@ -13,8 +13,17 @@ import {
   CalendarDays,
   Receipt,
 } from "lucide-react";
-import { useStore, formatINR, getActiveOrder, downloadCSV, type Order, type OrderStatus } from "@/lib/store";
+import {
+  useStore,
+  formatINR,
+  getActiveOrder,
+  downloadCSV,
+  cancelOrder,
+  type Order,
+  type OrderStatus,
+} from "@/lib/store";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({ component: Orders });
 
@@ -25,6 +34,9 @@ function Orders() {
   const orders = useStore((s) => s.orders);
   const [filter, setFilter] = useState<FilterStatus>("All");
   const [mounted, setMounted] = useState(false);
+  const [cancelingOrder, setCancelingOrder] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState("Ordered by mistake");
+  const [customReason, setCustomReason] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -36,7 +48,7 @@ function Orders() {
   const filteredOrders = orders.filter((order) => {
     if (filter === "All") return true;
     if (filter === "Active") {
-      return ["Pending", "Accepted", "Preparing", "Ready"].includes(order.status);
+      return ["Pending", "Preparing", "Ready"].includes(order.status);
     }
     if (filter === "Completed") {
       return ["Completed", "Delivered"].includes(order.status);
@@ -49,20 +61,18 @@ function Orders() {
 
   const getStatusSteps = (order: Order) => {
     const allSteps: { label: string; icon: typeof Check }[] = [
-      { label: "Placed", icon: Receipt },
-      { label: "Accepted", icon: Check },
+      { label: "Order Placed", icon: Receipt },
       { label: "Preparing", icon: UtensilsCrossed },
-      { label: "Ready", icon: Package },
-      { label: "Collected", icon: ShoppingBag },
+      { label: "Ready to Pick", icon: Package },
+      { label: "Delivered", icon: ShoppingBag },
     ];
 
     const statusMap: Record<OrderStatus, number> = {
       Pending: 0,
-      Accepted: 1,
-      Preparing: 2,
-      Ready: 3,
-      Delivered: 4,
-      Completed: 4,
+      Preparing: 1,
+      Ready: 2,
+      Delivered: 3,
+      Completed: 3,
       Cancelled: -1,
     };
 
@@ -79,8 +89,6 @@ function Orders() {
     switch (status) {
       case "Pending":
         return "bg-warning/15 text-warning";
-      case "Accepted":
-        return "bg-info/15 text-info";
       case "Preparing":
         return "bg-primary/15 text-primary";
       case "Ready":
@@ -135,9 +143,27 @@ function Orders() {
     { value: "Cancelled", label: "Cancelled" },
   ];
 
+  const canCancel = (order: Order) => ["Pending", "Preparing"].includes(order.status);
+
+  const handleCancelOrder = () => {
+    if (!cancelingOrder) return;
+    const finalReason = cancelReason === "Other" ? customReason.trim() : cancelReason;
+    if (!finalReason) {
+      toast.error("Please enter a cancellation reason");
+      return;
+    }
+    cancelOrder(cancelingOrder.id, finalReason);
+    toast.success(`${cancelingOrder.orderNumber} cancelled`, { description: finalReason });
+    setCancelingOrder(null);
+    setCancelReason("Ordered by mistake");
+    setCustomReason("");
+  };
+
   return (
     <AppLayout title="Orders">
-      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+      <div
+        className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}
+      >
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -166,7 +192,9 @@ function Orders() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="font-bold">Current Order</h2>
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(activeOrder.status)}`}>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(activeOrder.status)}`}
+                    >
                       {activeOrder.status.toUpperCase()}
                     </span>
                   </div>
@@ -191,8 +219,8 @@ function Orders() {
                           step.current
                             ? "bg-primary text-white ring-4 ring-primary/20 scale-110 shadow-lg shadow-primary/30"
                             : step.done
-                            ? "bg-primary text-white"
-                            : "bg-muted text-muted-foreground"
+                              ? "bg-primary text-white"
+                              : "bg-muted text-muted-foreground"
                         }`}
                       >
                         <StepIcon className={`h-5 w-5 ${step.current ? "animate-pulse" : ""}`} />
@@ -228,11 +256,22 @@ function Orders() {
                       </span>
                       <span className="font-medium">{item.name}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground">{formatINR(item.price * item.qty)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {formatINR(item.price * item.qty)}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
+
+            {canCancel(activeOrder) && (
+              <button
+                onClick={() => setCancelingOrder(activeOrder)}
+                className="mt-4 rounded-xl border border-destructive/30 px-4 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+              >
+                Cancel Order
+              </button>
+            )}
           </div>
         )}
 
@@ -269,7 +308,9 @@ function Orders() {
               </div>
               <h3 className="mt-4 font-semibold">No orders found</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {filter === "All" ? "You haven't placed any orders yet" : `No ${filter.toLowerCase()} orders`}
+                {filter === "All"
+                  ? "You haven't placed any orders yet"
+                  : `No ${filter.toLowerCase()} orders`}
               </p>
               <button
                 onClick={() => navigate({ to: "/menu" })}
@@ -292,8 +333,8 @@ function Orders() {
                       order.status === "Cancelled"
                         ? "bg-destructive/15 text-destructive"
                         : ["Completed", "Delivered"].includes(order.status)
-                        ? "bg-success/15 text-success"
-                        : "bg-primary/15 text-primary"
+                          ? "bg-success/15 text-success"
+                          : "bg-primary/15 text-primary"
                     }`}
                   >
                     {order.status === "Cancelled" ? (
@@ -309,7 +350,9 @@ function Orders() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-semibold">{order.orderNumber}</p>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}
+                      >
                         {order.status}
                       </span>
                     </div>
@@ -332,9 +375,22 @@ function Orders() {
                   {/* Amount & Action */}
                   <div className="text-right">
                     <p className="text-lg font-bold">{formatINR(order.total)}</p>
-                    <button className="mt-1 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                      View Details <ChevronRight className="h-3.5 w-3.5" />
-                    </button>
+                    {canCancel(order) ? (
+                      <button
+                        onClick={() => setCancelingOrder(order)}
+                        className="mt-1 text-xs font-semibold text-destructive opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                      >
+                        Cancel
+                      </button>
+                    ) : order.status === "Cancelled" && order.cancellationReason ? (
+                      <p className="mt-1 max-w-36 truncate text-xs text-muted-foreground">
+                        {order.cancellationReason}
+                      </p>
+                    ) : (
+                      <button className="mt-1 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                        View Details <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -351,6 +407,54 @@ function Orders() {
             <Plus className="h-6 w-6" />
           </button>
         </div>
+
+        {cancelingOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+              <h3 className="text-lg font-bold">Cancel {cancelingOrder.orderNumber}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cancellation updates everywhere immediately, including the kitchen queue.
+              </p>
+
+              <label className="mt-5 block text-sm font-medium">Reason</label>
+              <select
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                <option>Ordered by mistake</option>
+                <option>Selected wrong item</option>
+                <option>Selected wrong time slot</option>
+                <option>No longer required</option>
+                <option>Other</option>
+              </select>
+
+              {cancelReason === "Other" && (
+                <textarea
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Enter reason"
+                  className="mt-3 min-h-24 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              )}
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setCancelingOrder(null)}
+                  className="flex-1 rounded-xl border border-border py-2.5 font-medium transition-colors hover:bg-muted"
+                >
+                  Keep Order
+                </button>
+                <button
+                  onClick={handleCancelOrder}
+                  className="flex-1 rounded-xl bg-destructive py-2.5 font-semibold text-white transition-colors hover:bg-destructive/90"
+                >
+                  Cancel Order
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
