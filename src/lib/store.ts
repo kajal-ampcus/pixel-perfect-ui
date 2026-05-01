@@ -71,6 +71,29 @@ export type MealSlot = {
   status: "expired" | "active" | "upcoming";
 };
 
+export type AdminSlot = {
+  id: string;
+  label: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  capacity: number;
+  occupied: number;
+  deadlineMinutes: number;
+  active: boolean;
+};
+
+export type NotificationTarget = "All Users" | "Kitchen" | "Admin";
+
+export type AppNotification = {
+  id: string;
+  title: string;
+  message: string;
+  target: NotificationTarget;
+  read: boolean;
+  createdAt: string;
+};
+
 const STORAGE_KEY = "canteen.store.v2";
 
 type StoreShape = {
@@ -79,6 +102,8 @@ type StoreShape = {
   customers: Customer[];
   cart: CartItem[];
   walletBalance: number;
+  slots: AdminSlot[];
+  notifications: AppNotification[];
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -370,19 +395,35 @@ function seedOrders(menu: MenuItem[], customers: Customer[]): Order[] {
   ];
 }
 
+function seedSlots(): AdminSlot[] {
+  return [
+    { id: uid(), label: "MORNING SESSION", name: "Breakfast", startTime: "07:00", endTime: "09:00", capacity: 40, occupied: 40, deadlineMinutes: 30, active: false },
+    { id: uid(), label: "PEAK SESSION", name: "Lunch", startTime: "12:00", endTime: "14:00", capacity: 150, occupied: 124, deadlineMinutes: 30, active: true },
+    { id: uid(), label: "LIGHT SESSION", name: "Evening Snacks", startTime: "16:30", endTime: "17:30", capacity: 50, occupied: 12, deadlineMinutes: 30, active: true },
+    { id: uid(), label: "EVENING SESSION", name: "Dinner", startTime: "19:30", endTime: "21:00", capacity: 100, occupied: 5, deadlineMinutes: 30, active: true },
+  ];
+}
+
+function seedNotifications(): AppNotification[] {
+  return [
+    { id: uid(), title: "System Online", message: "Canteen management system is now live.", target: "All Users", read: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
+  ];
+}
+
 function load(): StoreShape {
   if (typeof window === "undefined") {
     const customers = seedCustomers();
     const menu = seedMenu();
-    return { customers, menu, orders: seedOrders(menu, customers), cart: [], walletBalance: 2500 };
+    return { customers, menu, orders: seedOrders(menu, customers), cart: [], walletBalance: 2500, slots: seedSlots(), notifications: seedNotifications() };
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as StoreShape;
-      // Ensure cart exists (migration)
       if (!parsed.cart) parsed.cart = [];
       if (!parsed.walletBalance) parsed.walletBalance = 2500;
+      if (!parsed.slots) parsed.slots = seedSlots();
+      if (!parsed.notifications) parsed.notifications = seedNotifications();
       parsed.menu = parsed.menu.map((item) => ({
         ...item,
         slot: normalizeCompanySlot(item.slot),
@@ -418,6 +459,8 @@ function load(): StoreShape {
     orders: seedOrders(menu, customers),
     cart: [],
     walletBalance: 2500,
+    slots: seedSlots(),
+    notifications: seedNotifications(),
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -762,6 +805,60 @@ export function downloadCSV(filename: string, rows: (string | number)[][]) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ----- Admin Slots -----
+export function listSlots(): AdminSlot[] {
+  return state.slots;
+}
+
+export function updateSlot(id: string, patch: Partial<AdminSlot>): void {
+  state = { ...state, slots: state.slots.map((s) => (s.id === id ? { ...s, ...patch } : s)) };
+  persist();
+  emit();
+}
+
+export function createSlot(input: Omit<AdminSlot, "id">): AdminSlot {
+  const slot: AdminSlot = { id: uid(), ...input };
+  state = { ...state, slots: [...state.slots, slot] };
+  persist();
+  emit();
+  return slot;
+}
+
+// ----- Notifications -----
+export function listNotifications(): AppNotification[] {
+  return state.notifications;
+}
+
+export function createNotification(input: Omit<AppNotification, "id" | "createdAt" | "read">): AppNotification {
+  const n: AppNotification = { id: uid(), read: false, createdAt: new Date().toISOString(), ...input };
+  state = { ...state, notifications: [n, ...state.notifications] };
+  persist();
+  emit();
+  return n;
+}
+
+export function markNotificationRead(id: string): void {
+  state = { ...state, notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) };
+  persist();
+  emit();
+}
+
+export function markAllNotificationsRead(): void {
+  state = { ...state, notifications: state.notifications.map((n) => ({ ...n, read: true })) };
+  persist();
+  emit();
+}
+
+export function getUnreadNotificationCount(): number {
+  return state.notifications.filter((n) => !n.read).length;
+}
+
+export function deleteNotification(id: string): void {
+  state = { ...state, notifications: state.notifications.filter((n) => n.id !== id) };
+  persist();
+  emit();
 }
 
 export function resetStore() {

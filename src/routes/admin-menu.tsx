@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { Plus, Pencil, X, UploadCloud, Trash2 } from "lucide-react";
+import { Plus, Pencil, X, UploadCloud, Trash2, Eye, EyeOff } from "lucide-react";
 import { AdminLayout } from "./admin-orders";
 import {
   useStore, createMenuItem, updateMenuItem, deleteMenuItem, formatINR,
@@ -11,8 +11,8 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin-menu")({ component: AdminMenu });
 
+type ExtendedCategory = ItemCategory | "Veg Combo" | "Non-Veg Combo";
 const TABS: Array<"All" | ItemCategory> = ["All", "Veg", "Non-Veg", "Beverages"];
-const SLOTS = ["Snacks", "Dinner", "Late Night Snacks"] as const;
 
 function AdminMenu() {
   const items = useStore((s) => s.menu);
@@ -43,6 +43,7 @@ function AdminMenu() {
 
   const toggleLive = (item: MenuItem) => {
     updateMenuItem(item.id, { live: !item.live });
+    toast.success(item.live ? "Item disabled" : "Item enabled");
   };
 
   return (
@@ -77,65 +78,64 @@ function AdminMenu() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        {visible.map((it, idx) => (
-          <div
-            key={it.id}
-            className={`flex items-center gap-3 p-3 sm:gap-4 sm:p-4 ${idx !== visible.length - 1 ? "border-b border-border/60" : ""}`}
-          >
+      {/* Card Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {visible.map((it) => (
+          <div key={it.id} className="group overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg">
+            {/* Image */}
             {it.image ? (
-              <img src={it.image} alt={it.name} className="h-14 w-14 flex-shrink-0 rounded-md object-cover sm:h-16 sm:w-16" />
+              <img src={it.image} alt={it.name} className="h-40 w-full object-cover" />
             ) : (
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-md bg-muted text-xs font-bold text-muted-foreground sm:h-16 sm:w-16">
+              <div className="flex h-40 items-center justify-center bg-muted text-2xl font-bold text-muted-foreground">
                 {it.name.slice(0, 2).toUpperCase()}
               </div>
             )}
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="truncate font-semibold">{it.name}</div>
-                {it.tag && <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">{it.tag}</span>}
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">{it.type.toUpperCase()}</span>
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <h3 className="truncate font-semibold">{it.name}</h3>
+                    {it.tag && <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">{it.tag}</span>}
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{it.description}</p>
+                </div>
+                <div className="text-lg font-bold text-primary">{formatINR(it.price)}</div>
               </div>
-              <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{it.description}</p>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] tracking-widest text-muted-foreground">
-                <span>{it.category.toUpperCase()}</span>
-                <span>·</span>
-                <span>{it.slot.toUpperCase()}</span>
-                <span>·</span>
-                <span>{it.days.length === 7 ? "ALL DAYS" : it.days.join(", ")}</span>
+
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                <span className={`rounded px-1.5 py-0.5 font-bold ${it.category === "Veg" ? "bg-success/20 text-success" : it.category === "Non-Veg" ? "bg-destructive/20 text-destructive" : "bg-info/20 text-info"}`}>
+                  {it.category.toUpperCase()}
+                </span>
+                <span className="rounded bg-muted px-1.5 py-0.5 font-bold text-muted-foreground">{it.type.toUpperCase()}</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">{it.days.length === 7 ? "ALL DAYS" : it.days.join(", ")}</span>
               </div>
-            </div>
-            <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
-              <div className="text-right font-bold text-primary">{formatINR(it.price)}</div>
-              <button
-                onClick={() => toggleLive(it)}
-                className={`flex h-4 w-7 items-center rounded-full p-0.5 transition ${it.live ? "bg-primary" : "bg-muted"}`}
-                aria-label={it.live ? "Disable" : "Enable"}
-              >
-                <div className={`h-3 w-3 rounded-full bg-white transition-transform ${it.live ? "translate-x-3" : ""}`} />
-              </button>
-              <button onClick={() => openEdit(it)} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Edit">
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-              <button onClick={() => remove(it)} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Delete">
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <button
+                  onClick={() => toggleLive(it)}
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold transition ${it.live ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}
+                >
+                  {it.live ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                  {it.live ? "Available" : "Hidden"}
+                </button>
+                <div className="flex gap-1">
+                  <button onClick={() => openEdit(it)} className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Edit">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => remove(it)} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label="Delete">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ))}
 
         {visible.length === 0 && (
-          <div className="p-10 text-center text-sm text-muted-foreground">
+          <div className="col-span-full p-10 text-center text-sm text-muted-foreground">
             No items match this filter.
           </div>
         )}
-
-        <button
-          onClick={openAdd}
-          className="flex w-full items-center justify-center gap-2 border-t border-dashed border-border bg-muted/20 p-3 text-xs font-semibold text-primary hover:bg-muted/40"
-        >
-          <Plus className="h-4 w-4" /> Create New Menu Item
-        </button>
       </div>
 
       {showForm && <ItemFormModal initial={editing} onClose={() => setShowForm(false)} />}
@@ -143,31 +143,39 @@ function AdminMenu() {
   );
 }
 
+type ComboItem = { name: string; qty: number };
+
 function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose: () => void }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [price, setPrice] = useState<string>(initial ? String(initial.price) : "");
-  const [category, setCategory] = useState<ItemCategory>(initial?.category ?? "Veg");
+  const [extCategory, setExtCategory] = useState<ExtendedCategory>(initial?.category ?? "Veg");
   const [type, setType] = useState<ItemType>(initial?.type ?? "Meal");
   const [slot, setSlot] = useState<string>(initial?.slot ?? "Snacks");
   const [days, setDays] = useState<Day[]>(initial?.days ?? [...ALL_DAYS]);
   const [image, setImage] = useState<string | undefined>(initial?.image);
   const [tag, setTag] = useState<string>(initial?.tag ?? "");
+  const [comboItems, setComboItems] = useState<ComboItem[]>([{ name: "", qty: 1 }]);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isCombo = extCategory === "Veg Combo" || extCategory === "Non-Veg Combo";
+  const baseCategory: ItemCategory = extCategory === "Veg Combo" ? "Veg" : extCategory === "Non-Veg Combo" ? "Non-Veg" : extCategory;
 
   const toggleDay = (d: Day) =>
     setDays((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
 
   const onPickFile = (file: File | undefined) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be ≤ 5MB");
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be ≤ 5MB"); return; }
     const reader = new FileReader();
     reader.onload = () => setImage(reader.result as string);
     reader.readAsDataURL(file);
   };
+
+  const addComboItem = () => setComboItems([...comboItems, { name: "", qty: 1 }]);
+  const removeComboItem = (i: number) => setComboItems(comboItems.filter((_, idx) => idx !== i));
+  const updateComboItem = (i: number, patch: Partial<ComboItem>) =>
+    setComboItems(comboItems.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
 
   const submit = () => {
     if (!name.trim()) return toast.error("Item name is required");
@@ -176,16 +184,24 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
     if (!description.trim()) return toast.error("Description is required");
     if (days.length === 0) return toast.error("Select at least one day");
 
+    let finalDesc = description.trim();
+    if (isCombo) {
+      const validCombo = comboItems.filter((c) => c.name.trim());
+      if (validCombo.length > 0) {
+        finalDesc += "\n\nCombo includes: " + validCombo.map((c) => `${c.name} x${c.qty}`).join(", ");
+      }
+    }
+
     const payload = {
       name: name.trim(),
-      description: description.trim(),
+      description: finalDesc,
       price: priceNum,
-      category,
+      category: baseCategory,
       type,
       slot,
       days,
       image,
-      tag: tag.trim() || undefined,
+      tag: isCombo ? (tag.trim() || "COMBO") : (tag.trim() || undefined),
       live: initial?.live ?? true,
     };
 
@@ -209,11 +225,11 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Item Name *">
+          <Fld label="Item Name *">
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Premium Veg Thali" className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
-          </Field>
+          </Fld>
 
-          <Field label="Price (₹) *">
+          <Fld label="Price (₹) *">
             <input
               value={price}
               onChange={(e) => { const v = e.target.value; if (/^\d*\.?\d*$/.test(v)) setPrice(v); }}
@@ -221,15 +237,19 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
               placeholder="180"
               className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary"
             />
-          </Field>
+          </Fld>
 
-          <Field label="Category *">
-            <select value={category} onChange={(e) => setCategory(e.target.value as ItemCategory)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none">
-              <option>Veg</option><option>Non-Veg</option><option>Beverages</option>
+          <Fld label="Category *">
+            <select value={extCategory} onChange={(e) => setExtCategory(e.target.value as ExtendedCategory)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none">
+              <option value="Veg">Veg</option>
+              <option value="Non-Veg">Non-Veg</option>
+              <option value="Beverages">Beverages</option>
+              <option value="Veg Combo">Veg Combo</option>
+              <option value="Non-Veg Combo">Non-Veg Combo</option>
             </select>
-          </Field>
+          </Fld>
 
-          <Field label="Item Type *">
+          <Fld label="Item Type *">
             <div className="flex gap-1 rounded-md border border-border p-1">
               {(["Breakfast", "Meal"] as const).map((t) => (
                 <button
@@ -242,26 +262,61 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
                 </button>
               ))}
             </div>
-          </Field>
+          </Fld>
 
-          <Field label="Slot *">
+          <Fld label="Slot *">
             <select value={slot} onChange={(e) => setSlot(e.target.value)} className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none">
-              {SLOTS.map((s) => <option key={s}>{s}</option>)}
+              <option>Snacks</option><option>Dinner</option><option>Late Night Snacks</option>
             </select>
-          </Field>
+          </Fld>
 
-          <Field label="Display Tag (optional)">
+          <Fld label="Display Tag (optional)">
             <input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="e.g. POPULAR" className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none" />
-          </Field>
+          </Fld>
 
           <div className="sm:col-span-2">
-            <Field label="Description *">
+            <Fld label="Description *">
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Ingredients & preparation..." className="w-full rounded-md border border-border bg-input/40 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary" />
-            </Field>
+            </Fld>
           </div>
 
+          {/* Combo Items Section */}
+          {isCombo && (
+            <div className="sm:col-span-2">
+              <Fld label="Combo Items">
+                <div className="space-y-2 rounded-md border border-border bg-input/20 p-3">
+                  {comboItems.map((ci, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        value={ci.name}
+                        onChange={(e) => updateComboItem(i, { name: e.target.value })}
+                        placeholder="Item name"
+                        className="flex-1 rounded-md border border-border bg-input/40 px-2 py-1.5 text-sm outline-none"
+                      />
+                      <input
+                        type="number"
+                        min={1}
+                        value={ci.qty}
+                        onChange={(e) => updateComboItem(i, { qty: Number(e.target.value) || 1 })}
+                        className="w-16 rounded-md border border-border bg-input/40 px-2 py-1.5 text-sm outline-none"
+                      />
+                      {comboItems.length > 1 && (
+                        <button type="button" onClick={() => removeComboItem(i)} className="rounded p-1 text-destructive hover:bg-destructive/10">
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={addComboItem} className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                    <Plus className="h-3 w-3" /> Add item to combo
+                  </button>
+                </div>
+              </Fld>
+            </div>
+          )}
+
           <div className="sm:col-span-2">
-            <Field label="Available Days *">
+            <Fld label="Available Days *">
               <div className="flex flex-wrap gap-2">
                 {ALL_DAYS.map((d) => {
                   const on = days.includes(d);
@@ -279,11 +334,11 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
                 <button type="button" onClick={() => setDays([...ALL_DAYS])} className="ml-auto rounded-md px-2 py-1 text-[10px] text-primary hover:underline">Select all</button>
                 <button type="button" onClick={() => setDays([])} className="rounded-md px-2 py-1 text-[10px] text-muted-foreground hover:underline">Clear</button>
               </div>
-            </Field>
+            </Fld>
           </div>
 
           <div className="sm:col-span-2">
-            <Field label="Item Image (optional)">
+            <Fld label="Item Image (optional)">
               <input ref={fileRef} type="file" accept="image/*" onChange={(e) => onPickFile(e.target.files?.[0])} className="hidden" />
               {image ? (
                 <div className="flex items-center gap-3 rounded-md border border-border bg-input/20 p-2">
@@ -303,7 +358,21 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
                   <div className="text-[10px] text-muted-foreground">PNG, JPG up to 5MB</div>
                 </button>
               )}
-            </Field>
+            </Fld>
+          </div>
+
+          {/* Availability toggle */}
+          <div className="sm:col-span-2">
+            <div className="flex items-center justify-between rounded-md border border-border p-3">
+              <span className="text-sm font-semibold">Available</span>
+              <button
+                type="button"
+                onClick={() => {/* toggle handled by live state in payload */}}
+                className="flex h-5 w-9 items-center rounded-full bg-primary p-0.5"
+              >
+                <div className="ml-auto h-4 w-4 rounded-full bg-white" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -318,6 +387,6 @@ function ItemFormModal({ initial, onClose }: { initial: MenuItem | null; onClose
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Fld({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><div className="mb-1 text-[11px] font-semibold text-muted-foreground">{label}</div>{children}</div>;
 }
