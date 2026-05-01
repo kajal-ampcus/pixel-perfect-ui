@@ -171,7 +171,7 @@ function AdminBilling() {
             <div className="font-semibold">Daily Sales Report</div>
             <div className="text-[11px] text-muted-foreground">Items sold on a given day, grouped by slot.</div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <input
               type="date"
               value={salesDate}
@@ -221,7 +221,7 @@ function AdminBilling() {
       <div className="rounded-xl border border-border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
           <div className="font-semibold">Customer Billing</div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <input
               type="month"
               value={reportMonth}
@@ -234,7 +234,7 @@ function AdminBilling() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search name, ID, dept..."
-                className="w-56 rounded-md border border-border bg-input/40 py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-md border border-border bg-input/40 py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-1 focus:ring-primary sm:w-56"
               />
             </div>
           </div>
@@ -321,7 +321,7 @@ function CustomerHistoryModal({ customer, orders, onClose, onExport }: {
           <div className="text-xs text-primary">{customer.name} · {customer.empId} · {customer.department}</div>
         </div>
 
-        <div className="mb-3 grid grid-cols-3 gap-2 text-xs">
+        <div className="mb-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
           <Tile label="Orders" value={String(orders.length)} />
           <Tile label="Meals" value={String(totalMeals)} />
           <Tile label="Total Spent" value={formatINR(total)} />
@@ -330,7 +330,8 @@ function CustomerHistoryModal({ customer, orders, onClose, onExport }: {
         {orders.length === 0 ? (
           <div className="py-6 text-center text-xs text-muted-foreground">No orders yet.</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
             <thead><tr className="border-b border-border text-left text-[10px] tracking-widest text-muted-foreground">
               <th className="py-2">DATE</th><th className="py-2">ORDER #</th><th className="py-2">ITEMS</th><th className="py-2 text-right">AMOUNT</th>
             </tr></thead>
@@ -344,7 +345,8 @@ function CustomerHistoryModal({ customer, orders, onClose, onExport }: {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
 
         <button onClick={onExport} className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">

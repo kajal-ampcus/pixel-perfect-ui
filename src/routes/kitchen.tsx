@@ -22,7 +22,7 @@ export function KitchenLayout({ children, title }: { children: ReactNode; title:
   const handleLogout = () => { logout(); navigate({ to: "/login" }); };
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-card/60 px-4 backdrop-blur md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/60 px-4 backdrop-blur sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <ChefHat className="h-4 w-4" />
@@ -44,7 +44,7 @@ export function KitchenLayout({ children, title }: { children: ReactNode; title:
           <LogOut className="h-4 w-4" />
         </button>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-28 md:p-6 md:pb-28">{children}</main>
+      <main className="w-full flex-1 px-4 py-6 pb-28 sm:px-6 lg:px-8">{children}</main>
       <BottomNav items={kitchenNav} />
     </div>
   );
@@ -79,7 +79,28 @@ function Kitchen() {
               <span className="rounded-md bg-muted px-3 py-1 font-semibold">12 TOTAL</span>
             </div>
           </div>
-          <table className="w-full text-sm">
+          <div className="divide-y divide-border md:hidden">
+            {orders.map((o) => (
+              <div key={o.id} className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-semibold text-primary">{o.id}</div>
+                    <div className="mt-1 text-sm font-semibold">{o.emp}</div>
+                    <div className="text-xs text-muted-foreground">{o.station}</div>
+                  </div>
+                  <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${o.statusColor}`}>{o.status}</span>
+                </div>
+                <div className="text-xs">{o.item}</div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-xs text-muted-foreground">{o.time}</span>
+                  <button className="rounded-md bg-primary px-3 py-1.5 text-[10px] font-bold text-primary-foreground">
+                    {o.action}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <table className="hidden w-full text-sm md:table">
             <thead>
               <tr className="border-b border-border bg-muted/30 text-left text-[10px] tracking-wider text-muted-foreground">
                 <th className="px-3 py-2">ORDER ID</th>
@@ -138,7 +159,7 @@ function Kitchen() {
         </div>
       </div>
 
-      <button className="fixed bottom-24 right-6 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+      <button className="fixed bottom-24 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg sm:right-6">
         <Plus className="h-5 w-5" />
       </button>
     </KitchenLayout>

@@ -1,149 +1,338 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { Sun, Sunrise, Moon, Plus, Wallet, Bell, Clock } from "lucide-react";
+import { Sun, Sunrise, Moon, Plus, Minus, Search, Filter, Leaf, Drumstick, Coffee, Star, Clock, Check } from "lucide-react";
+import { useStore, formatINR, addToCart, getMealSlots, type MenuItem, type ItemCategory } from "@/lib/store";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/menu")({ component: Menu });
 
 function Menu() {
-  const slots = [
-    { icon: Sunrise, name: "BREAKFAST", time: "07:00 AM - 10:30 AM", status: "CLOSED", state: "closed" },
-    { icon: Sun, name: "LUNCH", time: "11:30 AM - 02:00 PM", status: "ACTIVE", state: "active", sub: "Closes in 12m" },
-    { icon: Moon, name: "DINNER", time: "06:30 PM - 09:00 PM", status: "OPEN", state: "open" },
+  const menu = useStore((s) => s.menu);
+  const cart = useStore((s) => s.cart);
+  const mealSlots = getMealSlots();
+  const [selectedCategory, setSelectedCategory] = useState<ItemCategory | "All">("All");
+  const [selectedSlot, setSelectedSlot] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Get active slot
+  const activeSlot = mealSlots.find((s) => s.status === "active");
+
+  // Filter menu items
+  const filteredMenu = menu.filter((item) => {
+    if (!item.live) return false;
+    if (selectedCategory !== "All" && item.category !== selectedCategory) return false;
+    if (selectedSlot !== "All" && item.slot !== selectedSlot) return false;
+    if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  // Group by slot
+  const menuBySlot = filteredMenu.reduce((acc, item) => {
+    if (!acc[item.slot]) acc[item.slot] = [];
+    acc[item.slot].push(item);
+    return acc;
+  }, {} as Record<string, MenuItem[]>);
+
+  const categories: { value: ItemCategory | "All"; label: string; icon: typeof Leaf }[] = [
+    { value: "All", label: "All Items", icon: Star },
+    { value: "Veg", label: "Vegetarian", icon: Leaf },
+    { value: "Non-Veg", label: "Non-Veg", icon: Drumstick },
+    { value: "Beverages", label: "Beverages", icon: Coffee },
   ];
 
-  const dishes = [
-    {
-      tag: "CHEF'S SPECIAL",
-      tagColor: "bg-amber-700 text-white",
-      img: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=600&q=80",
-      name: "Roasted Herb Chicken",
-      price: "$12.50",
-      desc: "Slow-roasted organic chicken with rosemary, thyme, garlic, and a side of roasted root vegetables.",
-    },
-    {
-      tag: "VEGETARIAN",
-      tagColor: "bg-emerald-600 text-white",
-      img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80",
-      name: "Mediterranean Bowl",
-      price: "$10.00",
-      desc: "Quinoa base with hummus, falafel, cucumber salad, kalamata olives, and creamy tahini dressing.",
-    },
-    {
-      tag: "OMEGA-3",
-      tagColor: "bg-blue-600 text-white",
-      img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80",
-      name: "Grilled Salmon",
-      price: "$15.75",
-      desc: "Atlantic salmon fillet with wild rice pilaf and lemon-butter steamed asparagus tips.",
-    },
-  ];
+  const handleAddToCart = (item: MenuItem) => {
+    addToCart({
+      itemId: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.image,
+    });
 
-  const closed = [
-    { name: "Classic Omelette", desc: "Three eggs, cheddar cheese, parsley.", price: "$6.50" },
-    { name: "Berry Pancake Stack", desc: "Buttermilk pancakes with mixed berries.", price: "$8.20" },
-    { name: "Avocado Toast", desc: "Sourdough bread with poached egg.", price: "$9.00" },
-    { name: "Fruit Yogurt Parfait", desc: "Greek yogurt with granola, honey.", price: "$5.50" },
-  ];
+    // Show added animation
+    setAddedItems((prev) => new Set(prev).add(item.id));
+    setTimeout(() => {
+      setAddedItems((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }, 1500);
+
+    toast.success(`Added ${item.name} to cart!`, {
+      description: formatINR(item.price),
+      duration: 2000,
+    });
+  };
+
+  const getCartItemQty = (itemId: string) => {
+    const cartItem = cart.find((c) => c.itemId === itemId);
+    return cartItem?.qty ?? 0;
+  };
+
+  const getSlotIcon = (slot: string) => {
+    if (slot.toLowerCase().includes("breakfast")) return Sunrise;
+    if (slot.toLowerCase().includes("lunch")) return Sun;
+    return Moon;
+  };
+
+  const getCategoryColor = (category: ItemCategory) => {
+    switch (category) {
+      case "Veg":
+        return "bg-emerald-500";
+      case "Non-Veg":
+        return "bg-red-500";
+      case "Beverages":
+        return "bg-blue-500";
+      default:
+        return "bg-primary";
+    }
+  };
 
   return (
-    <AppLayout title="Meal Slot Management" showQuickOrder brand="Canteen Portal" brandSub="EMPLOYEE VIEW">
-      {/* Tabs */}
-      <div className="mb-4 flex items-center justify-between border-b border-border">
-        <div className="flex gap-6 text-sm">
-          {["Lunch Slots", "Dinner Slots", "Special Events"].map((t, i) => (
+    <AppLayout title="Menu">
+      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Today's Menu</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {activeSlot ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5 text-primary">
+                    <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    {activeSlot.name} is open now
+                  </span>
+                  {" • "}Closes at {activeSlot.endTime}
+                </>
+              ) : (
+                "Check available slots for ordering"
+              )}
+            </p>
+          </div>
+
+          {/* Search */}
+          <div className="relative max-w-xs flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search dishes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+
+        {/* Slot Pills */}
+        <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+          {mealSlots.map((slot) => {
+            const SlotIcon = getSlotIcon(slot.name);
+            const isActive = slot.status === "active";
+            const isExpired = slot.status === "expired";
+
+            return (
+              <button
+                key={slot.id}
+                onClick={() => setSelectedSlot(selectedSlot === slot.name ? "All" : slot.name)}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+                  selectedSlot === slot.name
+                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                    : isActive
+                    ? "border-2 border-primary bg-primary/10 text-primary"
+                    : isExpired
+                    ? "border border-border bg-muted/50 text-muted-foreground"
+                    : "border border-border bg-card text-foreground hover:border-primary/50"
+                }`}
+              >
+                <SlotIcon className="h-4 w-4" />
+                <span>{slot.name}</span>
+                {isActive && selectedSlot !== slot.name && (
+                  <span className="ml-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => (
             <button
-              key={t}
-              className={`pb-3 ${i === 0 ? "border-b-2 border-primary text-primary font-semibold" : "text-muted-foreground"}`}
+              key={cat.value}
+              onClick={() => setSelectedCategory(cat.value)}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                selectedCategory === cat.value
+                  ? "bg-primary text-white shadow-md"
+                  : "border border-border bg-card hover:bg-muted"
+              }`}
             >
-              {t}
+              <cat.icon className="h-4 w-4" />
+              {cat.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3 pb-3">
-          <span className="flex items-center gap-1 rounded-md bg-muted px-3 py-1 text-xs"><Wallet className="h-3 w-3 text-primary" /> $124.50</span>
-          <Bell className="h-4 w-4 text-muted-foreground" />
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </div>
 
-      <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 px-4 py-2 text-center text-xs text-primary">
-        ⓘ ORDERING RULE: ORDERS MUST BE PLACED 30 MINUTES BEFORE THE SLOT STARTS.
-      </div>
-
-      {/* Slot status pills */}
-      <div className="mb-6 grid gap-3 md:grid-cols-3">
-        {slots.map((s) => (
-          <div
-            key={s.name}
-            className={`flex items-center gap-3 rounded-lg border p-3 ${
-              s.state === "active" ? "border-primary bg-primary/10" : "border-border bg-card"
-            }`}
-          >
-            <div className={`flex h-9 w-9 items-center justify-center rounded-md ${s.state === "active" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              <s.icon className="h-4 w-4" />
-            </div>
-            <div className="flex-1">
-              <div className="text-xs font-semibold">{s.name}</div>
-              <div className="text-[11px] text-muted-foreground">{s.time}</div>
-            </div>
-            <div className="text-right">
-              <span className={`block rounded px-2 py-0.5 text-[10px] font-bold ${
-                s.state === "active" ? "bg-primary text-primary-foreground"
-                : s.state === "open" ? "bg-info/20 text-info"
-                : "bg-muted text-muted-foreground"
-              }`}>{s.status}</span>
-              {s.sub && <div className="mt-0.5 text-[10px] text-primary">{s.sub}</div>}
-            </div>
+        {/* Ordering Rule Notice */}
+        {activeSlot && (
+          <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+            <Clock className="h-5 w-5 text-primary" />
+            <p className="text-sm">
+              <span className="font-semibold text-primary">Ordering Tip:</span>{" "}
+              Orders must be placed 30 minutes before the slot ends for same-slot pickup.
+            </p>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Active menu */}
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-bold">Active Lunch Menu</h2>
-        <div className="flex gap-2 text-xs">
-          <span className="rounded bg-muted px-2 py-1">Category: Main Course</span>
-          <span className="rounded bg-muted px-2 py-1">Halal Certified</span>
-        </div>
-      </div>
-
-      <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {dishes.map((d) => (
-          <div key={d.name} className="overflow-hidden rounded-xl border border-border bg-card">
-            <div className="relative h-40">
-              <img src={d.img} alt={d.name} className="h-full w-full object-cover" />
-              <span className={`absolute left-3 top-3 rounded px-2 py-0.5 text-[10px] font-bold ${d.tagColor}`}>{d.tag}</span>
+        {/* Menu Grid */}
+        {Object.keys(menuBySlot).length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <Search className="h-8 w-8 text-muted-foreground" />
             </div>
-            <div className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="font-semibold">{d.name}</div>
-                <div className="text-sm font-bold text-primary">{d.price}</div>
+            <h3 className="mt-4 font-semibold">No items found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filters</p>
+          </div>
+        ) : (
+          Object.entries(menuBySlot).map(([slot, items]) => (
+            <div key={slot} className="space-y-4">
+              <div className="flex items-center gap-3">
+                {(() => {
+                  const SlotIcon = getSlotIcon(slot);
+                  return (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <SlotIcon className="h-4 w-4" />
+                    </div>
+                  );
+                })()}
+                <h2 className="text-lg font-bold">{slot}</h2>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {items.length} items
+                </span>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{d.desc}</p>
-              <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-primary py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
-                <Plus className="h-4 w-4" /> Add to Tray
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Closed menu */}
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-semibold text-muted-foreground">Closed: Breakfast Menu</h3>
-        <span className="text-[10px] font-bold text-destructive">DEADLINE EXPIRED</span>
-      </div>
-      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        {closed.map((c) => (
-          <div key={c.name} className="rounded-lg border border-border bg-card/50 p-3 opacity-60">
-            <div className="text-sm font-semibold">{c.name}</div>
-            <div className="text-[11px] text-muted-foreground">{c.desc}</div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="font-bold">{c.price}</span>
-              <span className="text-[10px] text-muted-foreground">UNAVAILABLE</span>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((item, index) => {
+                  const qty = getCartItemQty(item.id);
+                  const isAdded = addedItems.has(item.id);
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 card-hover"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      {/* Image */}
+                      <div className="relative h-44 overflow-hidden">
+                        <img
+                          src={item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"}
+                          alt={item.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                        {/* Tags */}
+                        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                          {item.tag && (
+                            <span className="rounded-full bg-primary px-2.5 py-1 text-[10px] font-bold text-white shadow-lg">
+                              {item.tag}
+                            </span>
+                          )}
+                          <span
+                            className={`flex h-5 w-5 items-center justify-center rounded-full ${getCategoryColor(item.category)}`}
+                          >
+                            {item.category === "Veg" ? (
+                              <Leaf className="h-3 w-3 text-white" />
+                            ) : item.category === "Non-Veg" ? (
+                              <Drumstick className="h-3 w-3 text-white" />
+                            ) : (
+                              <Coffee className="h-3 w-3 text-white" />
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Price overlay */}
+                        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                          <div>
+                            <h3 className="font-semibold text-white">{item.name}</h3>
+                          </div>
+                          <span className="rounded-lg bg-white/20 px-3 py-1 text-lg font-bold text-white backdrop-blur-sm">
+                            {formatINR(item.price)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4">
+                        <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
+
+                        {/* Add to cart */}
+                        <div className="mt-4">
+                          {qty > 0 ? (
+                            <div className="flex items-center justify-between rounded-xl bg-primary/10 p-1">
+                              <button
+                                onClick={() => {
+                                  const newQty = qty - 1;
+                                  if (newQty <= 0) {
+                                    // Remove from cart
+                                    import("@/lib/store").then(({ removeFromCart }) => {
+                                      removeFromCart(item.id);
+                                    });
+                                  } else {
+                                    import("@/lib/store").then(({ updateCartItemQty }) => {
+                                      updateCartItemQty(item.id, newQty);
+                                    });
+                                  }
+                                }}
+                                className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-primary shadow-sm transition-colors hover:bg-primary hover:text-white"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </button>
+                              <span className="text-lg font-bold text-primary">{qty}</span>
+                              <button
+                                onClick={() => handleAddToCart(item)}
+                                className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-sm transition-colors hover:bg-primary/90"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAddToCart(item)}
+                              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all ${
+                                isAdded
+                                  ? "bg-success text-white"
+                                  : "bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 btn-press"
+                              }`}
+                            >
+                              {isAdded ? (
+                                <>
+                                  <Check className="h-4 w-4" />
+                                  Added!
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="h-4 w-4" />
+                                  Add to Cart
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </AppLayout>
   );

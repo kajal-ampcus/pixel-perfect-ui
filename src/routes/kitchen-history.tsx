@@ -17,7 +17,7 @@ function KitchenHistory() {
     <KitchenLayout title="Order History">
       {/* Filters + KPI */}
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr_1fr_1.2fr]">
-        <div className="flex items-end gap-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">DATE RANGE</div>
             <select className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs">
@@ -57,7 +57,33 @@ function KitchenHistory() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
+        <div className="divide-y divide-border md:hidden">
+          {rows.map((r) => (
+            <div key={r.id} className="space-y-3 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold text-primary">{r.id}</div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${r.color} text-[10px] font-bold text-white`}>{r.initials}</div>
+                    <span className="text-sm font-semibold">{r.emp}</span>
+                  </div>
+                </div>
+                <span className="rounded bg-info/20 px-2 py-0.5 text-[10px] font-bold text-info">COLLECTED</span>
+              </div>
+              <div className="text-xs text-muted-foreground">{r.station}</div>
+              <div className="flex flex-wrap gap-1">
+                {r.items.map((i) => (
+                  <span key={i} className="rounded bg-muted px-2 py-0.5 text-[10px]">{i}</span>
+                ))}
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-mono text-muted-foreground">{r.time}</span>
+                <span className="font-semibold text-primary">{r.price}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <table className="hidden w-full text-sm md:table">
           <thead>
             <tr className="border-b border-border bg-muted/30 text-left text-[10px] tracking-wider text-muted-foreground">
               <th className="px-4 py-3">ORDER ID</th>
@@ -96,9 +122,9 @@ function KitchenHistory() {
             ))}
           </tbody>
         </table>
-        <div className="flex items-center justify-between border-t border-border p-3 text-xs">
+        <div className="flex flex-col gap-2 border-t border-border p-3 text-xs sm:flex-row sm:items-center sm:justify-between">
           <span className="text-muted-foreground">Showing 1-5 of 482 orders</span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 self-end sm:self-auto">
             <button className="rounded p-1 hover:bg-muted"><ChevronLeft className="h-3 w-3" /></button>
             {[1, 2, 3].map((n) => (
               <button key={n} className={`h-7 w-7 rounded text-xs ${n === 1 ? "bg-primary font-bold text-primary-foreground" : "hover:bg-muted"}`}>{n}</button>

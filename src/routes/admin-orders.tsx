@@ -28,7 +28,7 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
   const handleLogout = () => { logout(); navigate({ to: "/login" }); };
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-card/60 px-4 backdrop-blur md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-card/60 px-4 backdrop-blur sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <ChefHat className="h-4 w-4" />
@@ -54,7 +54,7 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
           <LogOut className="h-4 w-4" />
         </button>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 p-4 pb-28 md:p-6 md:pb-28">{children}</main>
+      <main className="w-full flex-1 px-4 py-6 pb-28 sm:px-6 lg:px-8">{children}</main>
       <BottomNav items={adminNav} />
     </div>
   );
@@ -124,13 +124,13 @@ function AdminOrders() {
           <h1 className="text-2xl font-bold">Live Orders</h1>
           <p className="text-xs text-muted-foreground">Auto-confirmed. Hover a row to see items.</p>
         </div>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search order # or name..."
-            className="w-64 rounded-md border border-border bg-input/40 py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-1 focus:ring-primary"
+            className="w-full rounded-md border border-border bg-input/40 py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-1 focus:ring-primary sm:w-64"
           />
         </div>
       </div>
@@ -209,6 +209,20 @@ function AdminOrders() {
                     Cancel
                   </button>
                 )}
+              </div>
+
+              <div className="col-span-2 rounded-lg bg-muted/30 p-2 md:hidden">
+                <div className="mb-1 text-[10px] font-bold tracking-widest text-muted-foreground">ITEMS</div>
+                <ul className="space-y-1">
+                  {o.items.map((it) => (
+                    <li key={it.itemId + it.name} className="flex items-center justify-between text-xs">
+                      <span>
+                        <span className="font-semibold text-primary">×{it.qty}</span> {it.name}
+                      </span>
+                      <span className="text-muted-foreground">{formatINR(it.price * it.qty)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {/* Hover popover with item details */}

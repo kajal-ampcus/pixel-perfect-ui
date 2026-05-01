@@ -1,136 +1,357 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { Check, UtensilsCrossed, ShoppingBag, Download, Plus } from "lucide-react";
+import {
+  Check,
+  UtensilsCrossed,
+  ShoppingBag,
+  Download,
+  Plus,
+  Clock,
+  Package,
+  XCircle,
+  ChevronRight,
+  CalendarDays,
+  Receipt,
+} from "lucide-react";
+import { useStore, formatINR, getActiveOrder, downloadCSV, type Order, type OrderStatus } from "@/lib/store";
+import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/orders")({ component: Orders });
 
-function Orders() {
-  const steps = [
-    { label: "Placed", done: true },
-    { label: "Preparing", current: true, icon: UtensilsCrossed },
-    { label: "Ready", done: false, icon: ShoppingBag },
-  ];
+type FilterStatus = "All" | "Active" | "Completed" | "Cancelled";
 
-  const history = [
-    { date: "Oct 24, 2023", time: "1:15 PM", meal: "Standard Lunch", items: "Chicken Biryani, Raita, Gulab Ja...", amt: "₹240.00", status: "Collected", action: "Reorder" },
-    { date: "Oct 23, 2023", time: "8:30 AM", meal: "Breakfast Combo", items: "Masala Dosa, Filter Coffee, Vad...", amt: "₹120.00", status: "Collected", action: "Reorder" },
-    { date: "Oct 22, 2023", time: "2:45 PM", meal: "Custom Platter", items: "Garden Salad, Fruit Bowl, Juice", amt: "₹310.00", status: "Cancelled", action: "Details" },
+function Orders() {
+  const navigate = useNavigate();
+  const orders = useStore((s) => s.orders);
+  const [filter, setFilter] = useState<FilterStatus>("All");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const activeOrder = getActiveOrder();
+
+  // Filter orders
+  const filteredOrders = orders.filter((order) => {
+    if (filter === "All") return true;
+    if (filter === "Active") {
+      return ["Pending", "Accepted", "Preparing", "Ready"].includes(order.status);
+    }
+    if (filter === "Completed") {
+      return ["Completed", "Delivered"].includes(order.status);
+    }
+    if (filter === "Cancelled") {
+      return order.status === "Cancelled";
+    }
+    return true;
+  });
+
+  const getStatusSteps = (order: Order) => {
+    const allSteps: { label: string; icon: typeof Check }[] = [
+      { label: "Placed", icon: Receipt },
+      { label: "Accepted", icon: Check },
+      { label: "Preparing", icon: UtensilsCrossed },
+      { label: "Ready", icon: Package },
+      { label: "Collected", icon: ShoppingBag },
+    ];
+
+    const statusMap: Record<OrderStatus, number> = {
+      Pending: 0,
+      Accepted: 1,
+      Preparing: 2,
+      Ready: 3,
+      Delivered: 4,
+      Completed: 4,
+      Cancelled: -1,
+    };
+
+    const currentIndex = statusMap[order.status];
+
+    return allSteps.map((step, index) => ({
+      ...step,
+      done: index < currentIndex,
+      current: index === currentIndex,
+    }));
+  };
+
+  const getStatusColor = (status: OrderStatus) => {
+    switch (status) {
+      case "Pending":
+        return "bg-warning/15 text-warning";
+      case "Accepted":
+        return "bg-info/15 text-info";
+      case "Preparing":
+        return "bg-primary/15 text-primary";
+      case "Ready":
+        return "bg-success/15 text-success";
+      case "Delivered":
+      case "Completed":
+        return "bg-success/15 text-success";
+      case "Cancelled":
+        return "bg-destructive/15 text-destructive";
+      default:
+        return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const formatOrderDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatOrderTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const handleExport = () => {
+    const rows = [
+      ["Order ID", "Date", "Slot", "Items", "Total", "Status"],
+      ...orders.map((o) => [
+        o.orderNumber,
+        formatOrderDate(o.createdAt),
+        o.slot,
+        o.items.map((i) => `${i.name} x${i.qty}`).join(", "),
+        o.total.toString(),
+        o.status,
+      ]),
+    ];
+    downloadCSV("orders-export.csv", rows);
+  };
+
+  const filters: { value: FilterStatus; label: string }[] = [
+    { value: "All", label: "All Orders" },
+    { value: "Active", label: "Active" },
+    { value: "Completed", label: "Completed" },
+    { value: "Cancelled", label: "Cancelled" },
   ];
 
   return (
-    <AppLayout title="" brand="Canteen Management" brandSub="CORPORATE HUB" user={{ name: "Alex Carter", role: "EMPLOYEE ID 2912" }}>
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Order Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Manage your active meals and track order history.</p>
-        </div>
-        <button className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs hover:bg-muted">
-          <Download className="h-3.5 w-3.5" /> Export Report
-        </button>
-      </div>
-
-      {/* Active priority order */}
-      <div className="mb-6 rounded-xl border border-border bg-card p-6">
-        <div className="mb-4 flex items-center gap-3">
-          <span className="rounded bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary">CURRENT PRIORITY</span>
-          <span className="text-xs text-muted-foreground">#CMS-AAX9G2</span>
-        </div>
-        <div className="grid gap-4 md:grid-cols-[1fr_2fr_1fr] md:items-center">
+    <AppLayout title="Orders">
+      <div className={`space-y-6 transition-opacity duration-500 ${mounted ? "opacity-100" : "opacity-0"}`}>
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="text-xl font-bold">Lunch — Veg Thali</div>
-            <div className="mt-1 text-xs text-muted-foreground">Station 4 • Order placed at 12:15 PM</div>
-            <span className="mt-3 inline-block rounded bg-primary px-3 py-1 text-[10px] font-bold text-primary-foreground">⏱ PREPARING</span>
+            <h1 className="text-2xl font-bold">Your Orders</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Track your current orders and view history
+            </p>
           </div>
-          <div className="flex items-center justify-between">
-            {steps.map((s, i) => {
-              const Icon = s.icon ?? Check;
-              return (
-                <div key={s.label} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        s.current ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
-                          : s.done ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <span className={`text-xs ${s.current ? "text-primary font-semibold" : "text-muted-foreground"}`}>{s.label}</span>
-                  </div>
-                  {i < steps.length - 1 && <div className={`mx-1 h-0.5 flex-1 ${s.done ? "bg-primary" : "bg-muted"}`} />}
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            <Download className="h-4 w-4" />
+            Export Report
+          </button>
+        </div>
+
+        {/* Active Order Card */}
+        {activeOrder && (
+          <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-orange-500/5 p-6 shadow-lg shadow-primary/5">
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white">
+                  <Clock className="h-5 w-5" />
                 </div>
-              );
-            })}
-          </div>
-          <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 text-center">
-            <div className="text-[10px] tracking-widest text-muted-foreground">ESTIMATED READY</div>
-            <div className="text-3xl font-bold text-primary">12:45 <span className="text-base">PM</span></div>
-            <div className="mt-1 text-[10px] text-muted-foreground">⏱ Approx. 12 min left</div>
-          </div>
-        </div>
-      </div>
-
-      {/* History */}
-      <div className="rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <div className="font-semibold">Order History</div>
-          <div className="flex gap-1 rounded-md bg-muted p-1 text-xs">
-            <button className="rounded bg-primary px-3 py-1 text-primary-foreground">All</button>
-            <button className="px-3 py-1 text-muted-foreground">Collected</button>
-            <button className="px-3 py-1 text-muted-foreground">Cancelled</button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Meal Type</th>
-                <th className="px-4 py-3">Items</th>
-                <th className="px-4 py-3">Amount</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((h) => (
-                <tr key={h.date + h.meal} className="border-b border-border/60 last:border-0">
-                  <td className="px-4 py-4">
-                    <div>{h.date}</div>
-                    <div className="text-xs text-muted-foreground">{h.time}</div>
-                  </td>
-                  <td className="px-4 py-4">{h.meal}</td>
-                  <td className="px-4 py-4 text-muted-foreground">{h.items}</td>
-                  <td className="px-4 py-4 font-semibold">{h.amt}</td>
-                  <td className="px-4 py-4">
-                    <span className={`rounded px-2 py-1 text-[10px] font-semibold ${h.status === "Collected" ? "bg-info/20 text-info" : "bg-destructive text-destructive-foreground"}`}>
-                      {h.status === "Collected" ? "✓ Collected" : "Cancelled"}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-bold">Current Order</h2>
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusColor(activeOrder.status)}`}>
+                      {activeOrder.status.toUpperCase()}
                     </span>
-                  </td>
-                  <td className="px-4 py-4 text-right text-xs font-semibold text-primary">{h.action}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex items-center justify-between border-t border-border p-3 text-xs text-muted-foreground">
-          <span>Showing 1 to 3 of 42 orders</span>
-          <div className="flex gap-1">
-            <button className="rounded border border-border px-2 py-1">‹</button>
-            {[1, 2, 3].map((n) => (
-              <button key={n} className={`rounded px-2 py-1 ${n === 1 ? "bg-primary text-primary-foreground" : "border border-border"}`}>{n}</button>
-            ))}
-            <span className="px-1">…</span>
-            <button className="rounded border border-border px-2 py-1">14</button>
-            <button className="rounded border border-border px-2 py-1">›</button>
+                  </div>
+                  <p className="text-sm text-primary">{activeOrder.orderNumber}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-primary">{formatINR(activeOrder.total)}</p>
+                <p className="text-xs text-muted-foreground">{activeOrder.items.length} items</p>
+              </div>
+            </div>
+
+            {/* Progress Steps */}
+            <div className="mb-5 flex items-center justify-between">
+              {getStatusSteps(activeOrder).map((step, i, arr) => {
+                const StepIcon = step.icon;
+                return (
+                  <div key={step.label} className="flex flex-1 items-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-500 ${
+                          step.current
+                            ? "bg-primary text-white ring-4 ring-primary/20 scale-110 shadow-lg shadow-primary/30"
+                            : step.done
+                            ? "bg-primary text-white"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        <StepIcon className={`h-5 w-5 ${step.current ? "animate-pulse" : ""}`} />
+                      </div>
+                      <span
+                        className={`text-xs font-medium ${
+                          step.current ? "text-primary font-semibold" : "text-muted-foreground"
+                        }`}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+                    {i < arr.length - 1 && (
+                      <div
+                        className={`mx-2 h-1.5 flex-1 rounded-full transition-all duration-500 ${
+                          step.done ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Order Items */}
+            <div className="rounded-xl bg-card/80 p-4 backdrop-blur">
+              <div className="space-y-2">
+                {activeOrder.items.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
+                        {item.qty}x
+                      </span>
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{formatINR(item.price * item.qty)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+        )}
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+          {filters.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+                filter === f.value
+                  ? "bg-primary text-white shadow-lg shadow-primary/30"
+                  : "border border-border bg-card hover:bg-muted"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Orders List */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="border-b border-border p-5">
+            <h3 className="font-bold">Order History</h3>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {filteredOrders.length} orders found
+            </p>
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <Package className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="mt-4 font-semibold">No orders found</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {filter === "All" ? "You haven't placed any orders yet" : `No ${filter.toLowerCase()} orders`}
+              </p>
+              <button
+                onClick={() => navigate({ to: "/menu" })}
+                className="mt-4 flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white"
+              >
+                <Plus className="h-4 w-4" />
+                Browse Menu
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {filteredOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="group flex items-center gap-4 p-5 transition-colors hover:bg-muted/50"
+                >
+                  {/* Order Icon */}
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+                      order.status === "Cancelled"
+                        ? "bg-destructive/15 text-destructive"
+                        : ["Completed", "Delivered"].includes(order.status)
+                        ? "bg-success/15 text-success"
+                        : "bg-primary/15 text-primary"
+                    }`}
+                  >
+                    {order.status === "Cancelled" ? (
+                      <XCircle className="h-5 w-5" />
+                    ) : ["Completed", "Delivered"].includes(order.status) ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      <Clock className="h-5 w-5" />
+                    )}
+                  </div>
+
+                  {/* Order Details */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold">{order.orderNumber}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-sm text-muted-foreground">
+                      {order.items.map((i) => `${i.name} x${i.qty}`).join(", ")}
+                    </p>
+                    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {formatOrderDate(order.createdAt)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatOrderTime(order.createdAt)}
+                      </span>
+                      <span className="rounded-md bg-muted px-2 py-0.5">{order.slot}</span>
+                    </div>
+                  </div>
+
+                  {/* Amount & Action */}
+                  <div className="text-right">
+                    <p className="text-lg font-bold">{formatINR(order.total)}</p>
+                    <button className="mt-1 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                      View Details <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Floating Action */}
+        <div className="fixed bottom-32 right-6 z-20">
+          <button
+            onClick={() => navigate({ to: "/menu" })}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-xl shadow-primary/30 transition-transform hover:scale-110"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
         </div>
       </div>
-
-      <button className="fixed bottom-6 left-6 hidden items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg md:flex">
-        <Plus className="h-4 w-4" /> Place New Order
-      </button>
     </AppLayout>
   );
 }

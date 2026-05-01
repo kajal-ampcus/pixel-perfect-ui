@@ -17,23 +17,23 @@ function KitchenNotifications() {
 
   return (
     <KitchenLayout title="Notifications">
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Notifications Center</h1>
           <p className="text-xs text-muted-foreground">Managing real-time updates from across the kitchen operations.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button className="flex items-center gap-1 rounded-md border border-border bg-card px-3 py-1.5 text-xs"><Filter className="h-3 w-3" /> Filter Alerts</button>
           <button className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"><CheckCheck className="h-3 w-3" /> Mark All Resolved</button>
         </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="grid grid-cols-[1fr_2.5fr_1fr_0.8fr] border-b border-border px-4 py-2 text-[10px] tracking-wider text-muted-foreground">
+        <div className="hidden grid-cols-[1fr_2.5fr_1fr_0.8fr] border-b border-border px-4 py-2 text-[10px] tracking-wider text-muted-foreground md:grid">
           <span>TYPE</span><span>MESSAGE</span><span>TIME</span><span>STATUS</span>
         </div>
         {list.map((n, i) => (
-          <div key={i} className="grid grid-cols-[1fr_2.5fr_1fr_0.8fr] items-center border-b border-border/60 px-4 py-3 last:border-0">
+          <div key={i} className="grid items-start gap-3 border-b border-border/60 px-4 py-3 last:border-0 md:grid-cols-[1fr_2.5fr_1fr_0.8fr] md:items-center">
             <div className="flex items-center gap-2">
               <div className={`flex h-7 w-7 items-center justify-center rounded-md ${n.color}`}><n.icon className="h-3.5 w-3.5" /></div>
               <span className="text-xs font-semibold">{n.type}</span>
@@ -42,7 +42,7 @@ function KitchenNotifications() {
               <div className="text-xs font-semibold">{n.msg}</div>
               <div className="text-[10px] text-muted-foreground">{n.sub}</div>
             </div>
-            <div className="text-xs text-muted-foreground">{n.time}</div>
+            <div className="text-xs text-muted-foreground md:text-left">{n.time}</div>
             <div><span className={`rounded px-2 py-0.5 text-[10px] font-bold ${n.statusColor}`}>{n.status}</span></div>
           </div>
         ))}
