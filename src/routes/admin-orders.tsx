@@ -2,14 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   LayoutGrid, ChefHat, Clock3, ReceiptText, Flame,
-  Search, LogOut, ShoppingBag,
+  Search, LogOut, ShoppingBag, Bell,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { logout, getCurrentUser } from "@/lib/auth";
 import { BottomNav, type BottomNavItem } from "@/components/BottomNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useStore, updateOrderStatus, formatINR, type OrderStatus } from "@/lib/store";
-import { toast } from "sonner";
+import { useStore, formatINR, type OrderStatus } from "@/lib/store";
 
 export const Route = createFileRoute("/admin-orders")({ component: AdminOrders });
 
@@ -25,6 +24,7 @@ const adminNav: BottomNavItem[] = [
 export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: string }) {
   const navigate = useNavigate();
   const user = typeof window !== "undefined" ? getCurrentUser() : null;
+  const unreadCount = useStore((s) => s.notifications.filter((n) => !n.read).length);
   const handleLogout = () => { logout(); navigate({ to: "/login" }); };
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -43,6 +43,19 @@ export function AdminLayout({ children, crumb }: { children: ReactNode; crumb: s
           <input placeholder="Search..." className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none" />
         </div>
         <div className="ml-auto flex items-center gap-2 md:ml-0">
+          {/* Notification Bell */}
+          <button
+            onClick={() => navigate({ to: "/admin-notifications" })}
+            className="relative rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-amber-700" />
           <div className="hidden text-xs sm:block">
             <div className="font-semibold leading-none">{user?.name ?? "Admin"}</div>
@@ -94,22 +107,6 @@ function AdminOrders() {
     return list;
   }, [liveOrders, filter, query]);
 
-  const advance = (id: string, current: OrderStatus) => {
-    const order = STAGES as readonly OrderStatus[];
-    const i = order.indexOf(current);
-    if (i >= 0 && i < order.length - 1) {
-      updateOrderStatus(id, order[i + 1]);
-      toast.success(`Status updated to ${order[i + 1]}`);
-    }
-  };
-
-  const cancel = (id: string) => {
-    if (confirm("Cancel this order?")) {
-      updateOrderStatus(id, "Cancelled");
-      toast.success("Order cancelled");
-    }
-  };
-
   const stageStyle = (s: OrderStatus) =>
     s === "Pending" ? "bg-muted text-foreground" :
     s === "Preparing" ? "bg-warning/20 text-warning" :
@@ -117,12 +114,17 @@ function AdminOrders() {
     s === "Delivered" ? "bg-success/20 text-success" :
     "bg-destructive/20 text-destructive";
 
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
     <AdminLayout crumb="Live Orders">
       <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Live Orders</h1>
-          <p className="text-xs text-muted-foreground">Auto-confirmed. Hover a row to see items.</p>
+          <p className="text-xs text-muted-foreground">View-only. Order actions are managed by Kitchen.</p>
         </div>
         <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -160,93 +162,69 @@ function AdminOrders() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="hidden grid-cols-[120px_1fr_120px_140px_120px_140px] gap-3 border-b border-border bg-muted/30 px-4 py-2 text-[10px] font-bold tracking-widest text-muted-foreground md:grid">
+        <div className="hidden grid-cols-[100px_1fr_100px_100px_100px_100px_90px] gap-3 border-b border-border bg-muted/30 px-4 py-2 text-[10px] font-bold tracking-widest text-muted-foreground md:grid">
           <span>ORDER #</span>
           <span>CUSTOMER</span>
           <span>SLOT</span>
+          <span>ITEMS</span>
           <span>TOTAL</span>
           <span>STATUS</span>
-          <span className="text-right">ACTION</span>
+          <span>TIME</span>
         </div>
 
         {visible.length === 0 && (
           <div className="p-10 text-center text-sm text-muted-foreground">No live orders.</div>
         )}
 
-        {visible.map((o) => {
-          const i = (STAGES as readonly OrderStatus[]).indexOf(o.status);
-          const next = i >= 0 && i < STAGES.length - 1 ? STAGES[i + 1] : null;
-          const isFinal = o.status === "Delivered";
-          return (
-            <div
-              key={o.id}
-              className="group relative grid grid-cols-2 gap-2 border-b border-border/40 px-4 py-3 text-sm transition-colors last:border-0 hover:bg-muted/30 md:grid-cols-[120px_1fr_120px_140px_120px_140px] md:gap-3 md:items-center"
-            >
-              <div className="font-mono text-xs text-primary md:text-sm">#{o.orderNumber}</div>
-              <div className="col-span-2 md:col-span-1">
-                <div className="font-semibold">{o.customerName}</div>
-                <div className="text-[10px] text-muted-foreground">{o.department}</div>
-              </div>
-              <div className="text-xs text-muted-foreground">{o.slot}</div>
-              <div className="font-semibold">{formatINR(o.total)}</div>
-              <div>
-                <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${stageStyle(o.status)}`}>● {o.status}</span>
-              </div>
-              <div className="flex flex-wrap justify-end gap-1">
-                {next && !isFinal && (
-                  <button
-                    onClick={() => advance(o.id, o.status)}
-                    className="rounded-md bg-primary px-2 py-1 text-[10px] font-bold text-primary-foreground hover:opacity-90"
-                  >
-                    → {next}
-                  </button>
-                )}
-                {!isFinal && (
-                  <button
-                    onClick={() => cancel(o.id)}
-                    className="rounded-md border border-destructive/50 px-2 py-1 text-[10px] font-bold text-destructive hover:bg-destructive/10"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
+        {visible.map((o) => (
+          <div
+            key={o.id}
+            className="group relative grid grid-cols-2 gap-2 border-b border-border/40 px-4 py-3 text-sm transition-colors last:border-0 hover:bg-muted/30 md:grid-cols-[100px_1fr_100px_100px_100px_100px_90px] md:gap-3 md:items-center"
+          >
+            <div className="font-mono text-xs text-primary md:text-sm">#{o.orderNumber}</div>
+            <div className="col-span-2 md:col-span-1">
+              <div className="font-semibold">{o.customerName}</div>
+              <div className="text-[10px] text-muted-foreground">{o.department}</div>
+            </div>
+            <div className="text-xs text-muted-foreground">{o.slot}</div>
+            <div className="text-xs text-muted-foreground">{o.items.reduce((s, i) => s + i.qty, 0)} items</div>
+            <div className="font-semibold">{formatINR(o.total)}</div>
+            <div>
+              <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${stageStyle(o.status)}`}>● {o.status}</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground">{formatTime(o.createdAt)}</div>
 
-              <div className="col-span-2 rounded-lg bg-muted/30 p-2 md:hidden">
-                <div className="mb-1 text-[10px] font-bold tracking-widest text-muted-foreground">ITEMS</div>
-                <ul className="space-y-1">
-                  {o.items.map((it) => (
-                    <li key={it.itemId + it.name} className="flex items-center justify-between text-xs">
-                      <span>
-                        <span className="font-semibold text-primary">×{it.qty}</span> {it.name}
-                      </span>
-                      <span className="text-muted-foreground">{formatINR(it.price * it.qty)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {/* Mobile items view */}
+            <div className="col-span-2 rounded-lg bg-muted/30 p-2 md:hidden">
+              <div className="mb-1 text-[10px] font-bold tracking-widest text-muted-foreground">ITEMS</div>
+              <ul className="space-y-1">
+                {o.items.map((it) => (
+                  <li key={it.itemId + it.name} className="flex items-center justify-between text-xs">
+                    <span><span className="font-semibold text-primary">×{it.qty}</span> {it.name}</span>
+                    <span className="text-muted-foreground">{formatINR(it.price * it.qty)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-              {/* Hover popover with item details */}
-              <div className="pointer-events-none absolute left-4 right-4 top-full z-20 mt-1 origin-top scale-95 rounded-lg border border-border bg-popover p-3 opacity-0 shadow-2xl transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 md:left-auto md:right-4 md:w-72">
-                <div className="mb-2 text-[10px] font-bold tracking-widest text-muted-foreground">ITEMS ORDERED</div>
-                <ul className="space-y-1">
-                  {o.items.map((it) => (
-                    <li key={it.itemId + it.name} className="flex items-center justify-between text-xs">
-                      <span>
-                        <span className="font-semibold text-primary">×{it.qty}</span>{" "}
-                        {it.name}
-                      </span>
-                      <span className="text-muted-foreground">{formatINR(it.price * it.qty)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-2 flex justify-between border-t border-border pt-2 text-xs font-bold">
-                  <span>Total</span>
-                  <span className="text-primary">{formatINR(o.total)}</span>
-                </div>
+            {/* Hover popover */}
+            <div className="pointer-events-none absolute left-4 right-4 top-full z-20 mt-1 origin-top scale-95 rounded-lg border border-border bg-popover p-3 opacity-0 shadow-2xl transition-all duration-200 group-hover:scale-100 group-hover:opacity-100 md:left-auto md:right-4 md:w-72">
+              <div className="mb-2 text-[10px] font-bold tracking-widest text-muted-foreground">ITEMS ORDERED</div>
+              <ul className="space-y-1">
+                {o.items.map((it) => (
+                  <li key={it.itemId + it.name} className="flex items-center justify-between text-xs">
+                    <span><span className="font-semibold text-primary">×{it.qty}</span> {it.name}</span>
+                    <span className="text-muted-foreground">{formatINR(it.price * it.qty)}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 flex justify-between border-t border-border pt-2 text-xs font-bold">
+                <span>Total</span>
+                <span className="text-primary">{formatINR(o.total)}</span>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </AdminLayout>
   );
