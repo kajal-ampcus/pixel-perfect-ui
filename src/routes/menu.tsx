@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import {
   Sun,
@@ -33,12 +33,15 @@ export const Route = createFileRoute("/menu")({ component: Menu });
 
 function Menu() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/menu" });
   const menu = useStore((s) => s.menu);
   const cart = useStore((s) => s.cart);
   const mealSlots = getMealSlots();
   const availableMealSlots = getAvailableMealSlots();
   const [selectedCategory, setSelectedCategory] = useState<ItemCategory | "All">("All");
-  const [selectedSlot, setSelectedSlot] = useState<string>("All");
+  const [selectedSlot, setSelectedSlot] = useState<string>(
+    (search as any)?.slot ? (search as any).slot : "All"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
@@ -46,6 +49,13 @@ function Menu() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    // Apply slot filter from URL parameter
+    if ((search as any)?.slot && (search as any).slot !== "All") {
+      setSelectedSlot((search as any).slot);
+    }
+  }, [search]);
 
   useEffect(() => {
     if (selectedSlot !== "All" && !availableMealSlots.some((slot) => slot.name === selectedSlot)) {
@@ -156,6 +166,13 @@ function Menu() {
                 "Showing active and upcoming slots only"
               )}
             </p>
+            {selectedSlot !== "All" && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5">
+                <span className="text-xs font-medium text-primary">
+                  📍 Filtering by: <span className="font-semibold">{selectedSlot}</span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Search */}
@@ -399,6 +416,22 @@ function Menu() {
                 View Cart
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Floating View Cart Button (top-right) */}
+        {cart.length > 0 && (
+          <div className="fixed top-20 right-6 z-30 animate-in fade-in slide-in-from-top-2 duration-300">
+            <button
+              onClick={() => navigate({ to: "/cart" })}
+              className="relative flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-primary/40 transition-all hover:shadow-primary/50 hover:scale-105"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Cart
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-white">
+                {cart.reduce((sum, item) => sum + item.qty, 0)}
+              </span>
+            </button>
           </div>
         )}
       </div>

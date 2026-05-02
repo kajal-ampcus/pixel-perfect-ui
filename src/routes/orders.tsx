@@ -12,6 +12,8 @@ import {
   ChevronRight,
   CalendarDays,
   Receipt,
+  ChevronLeft,
+  Info,
 } from "lucide-react";
 import {
   useStore,
@@ -28,15 +30,23 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/orders")({ component: Orders });
 
 type FilterStatus = "All" | "Active" | "Completed" | "Cancelled";
+type DateFilter = "all" | "today" | "week" | "custom";
 
 function Orders() {
   const navigate = useNavigate();
   const orders = useStore((s) => s.orders);
   const [filter, setFilter] = useState<FilterStatus>("All");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [cancelingOrder, setCancelingOrder] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState("Ordered by mistake");
   const [customReason, setCustomReason] = useState("");
+
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     setMounted(true);
@@ -44,20 +54,59 @@ function Orders() {
 
   const activeOrder = getActiveOrder();
 
+  // Helper function to check if date is in range
+  const isDateInRange = (orderDate: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const orderDateOnly = new Date(orderDate);
+    orderDateOnly.setHours(0, 0, 0, 0);
+
+    switch (dateFilter) {
+      case "today":
+        return orderDateOnly.getTime() === today.getTime();
+      case "week":
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return orderDateOnly >= weekAgo && orderDateOnly <= today;
+      case "custom":
+        if (!customStartDate || !customEndDate) return true;
+        const start = new Date(customStartDate);
+        const end = new Date(customEndDate);
+        end.setHours(23, 59, 59, 999);
+        return orderDateOnly >= start && orderDateOnly <= end;
+      default:
+        return true;
+    }
+  };
+
   // Filter orders
-  const filteredOrders = orders.filter((order) => {
-    if (filter === "All") return true;
-    if (filter === "Active") {
-      return ["Pending", "Preparing", "Ready"].includes(order.status);
-    }
-    if (filter === "Completed") {
-      return ["Completed", "Delivered"].includes(order.status);
-    }
-    if (filter === "Cancelled") {
-      return order.status === "Cancelled";
-    }
-    return true;
-  });
+  const filteredOrders = orders
+    .filter((order) => {
+      if (filter === "All") return true;
+      if (filter === "Active") {
+        return ["Pending", "Preparing", "Ready"].includes(order.status);
+      }
+      if (filter === "Completed") {
+        return ["Completed", "Delivered"].includes(order.status);
+      }
+      if (filter === "Cancelled") {
+        return order.status === "Cancelled";
+      }
+      return true;
+    })
+    .filter((order) => isDateInRange(new Date(order.createdAt)))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, dateFilter, customStartDate, customEndDate]);
 
   const getStatusSteps = (order: Order) => {
     const allSteps: { label: string; icon: typeof Check }[] = [
@@ -276,20 +325,66 @@ function Orders() {
         )}
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-          {filters.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-                filter === f.value
-                  ? "bg-primary text-white shadow-lg shadow-primary/30"
-                  : "border border-border bg-card hover:bg-muted"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="space-y-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+            {filters.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+                  filter === f.value
+                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                    : "border border-border bg-card hover:bg-muted"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Date Filter */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <span className="text-sm font-medium text-muted-foreground">Filter by date:</span>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "all" as const, label: "All Time" },
+                { value: "today" as const, label: "Today" },
+                { value: "week" as const, label: "Last 7 Days" },
+                { value: "custom" as const, label: "Custom" },
+              ].map((d) => (
+                <button
+                  key={d.value}
+                  onClick={() => setDateFilter(d.value)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                    dateFilter === d.value
+                      ? "bg-primary text-white"
+                      : "border border-border bg-card hover:bg-muted"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Date Range */}
+          {dateFilter === "custom" && (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+              <span className="text-sm text-muted-foreground">to</span>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          )}
         </div>
 
         {/* Orders List */}
@@ -298,6 +393,7 @@ function Orders() {
             <h3 className="font-bold">Order History</h3>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {filteredOrders.length} orders found
+              {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </p>
           </div>
 
@@ -321,79 +417,189 @@ function Orders() {
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {filteredOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="group flex items-center gap-4 p-5 transition-colors hover:bg-muted/50"
-                >
-                  {/* Order Icon */}
-                  <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                      order.status === "Cancelled"
-                        ? "bg-destructive/15 text-destructive"
-                        : ["Completed", "Delivered"].includes(order.status)
-                          ? "bg-success/15 text-success"
-                          : "bg-primary/15 text-primary"
-                    }`}
+            <div>
+              <div className="divide-y divide-border">
+                {paginatedOrders.map((order) => (
+                  <div key={order.id} className="p-0">
+                    {/* Main Order Row */}
+                    <button
+                      onClick={() =>
+                        setExpandedOrder(expandedOrder === order.id ? null : order.id)
+                      }
+                      className="w-full text-left transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-center gap-4 p-5">
+                        {/* Order Icon */}
+                        <div
+                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+                            order.status === "Cancelled"
+                              ? "bg-destructive/15 text-destructive"
+                              : ["Completed", "Delivered"].includes(order.status)
+                                ? "bg-success/15 text-success"
+                                : "bg-primary/15 text-primary"
+                          }`}
+                        >
+                          {order.status === "Cancelled" ? (
+                            <XCircle className="h-5 w-5" />
+                          ) : ["Completed", "Delivered"].includes(order.status) ? (
+                            <Check className="h-5 w-5" />
+                          ) : (
+                            <Clock className="h-5 w-5" />
+                          )}
+                        </div>
+
+                        {/* Order Details */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{order.orderNumber}</p>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}
+                            >
+                              {order.status}
+                            </span>
+                          </div>
+                          <p className="mt-1 truncate text-sm text-muted-foreground">
+                            {order.items.map((i) => `${i.name} x${i.qty}`).join(", ")}
+                          </p>
+                          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <CalendarDays className="h-3.5 w-3.5" />
+                              {formatOrderDate(order.createdAt)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatOrderTime(order.createdAt)}
+                            </span>
+                            <span className="rounded-md bg-muted px-2 py-0.5">{order.slot}</span>
+                          </div>
+                        </div>
+
+                        {/* Amount & Expand Icon */}
+                        <div className="text-right">
+                          <p className="text-lg font-bold">{formatINR(order.total)}</p>
+                          <div className="mt-2 flex items-center justify-center">
+                            <ChevronRight
+                              className={`h-4 w-4 text-muted-foreground transition-transform ${
+                                expandedOrder === order.id ? "rotate-90" : ""
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Expanded Details */}
+                    {expandedOrder === order.id && (
+                      <div className="border-t border-border bg-muted/30 p-5">
+                        <div className="space-y-4">
+                          {/* Items Breakdown */}
+                          <div>
+                            <h4 className="mb-2 text-sm font-semibold">Items</h4>
+                            <div className="space-y-2">
+                              {order.items.map((item, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center justify-between text-sm"
+                                >
+                                  <span className="text-muted-foreground">
+                                    {item.name} <span className="font-medium">x{item.qty}</span>
+                                  </span>
+                                  <span className="font-medium">{formatINR(item.price * item.qty)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Price Breakdown */}
+                          <div className="border-t border-border pt-4">
+                            <div className="flex items-center justify-between text-sm font-semibold">
+                              <span>Total:</span>
+                              <span className="text-primary">{formatINR(order.total)}</span>
+                            </div>
+                          </div>
+
+                          {/* Status & Dates */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Status</p>
+                              <p className="mt-1 font-medium">{order.status}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Slot</p>
+                              <p className="mt-1 font-medium">{order.slot}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Order Date</p>
+                              <p className="mt-1 font-medium">{formatOrderDate(order.createdAt)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Order Time</p>
+                              <p className="mt-1 font-medium">{formatOrderTime(order.createdAt)}</p>
+                            </div>
+                          </div>
+
+                          {/* Cancellation Reason */}
+                          {order.cancellationReason && (
+                            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                              <p className="text-xs text-destructive">Cancellation Reason</p>
+                              <p className="mt-1 text-sm font-medium">{order.cancellationReason}</p>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          {canCancel(order) && (
+                            <button
+                              onClick={() => setCancelingOrder(order)}
+                              className="w-full rounded-lg border border-destructive/30 py-2 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                            >
+                              Cancel Order
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 border-t border-border p-5">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted"
                   >
-                    {order.status === "Cancelled" ? (
-                      <XCircle className="h-5 w-5" />
-                    ) : ["Completed", "Delivered"].includes(order.status) ? (
-                      <Check className="h-5 w-5" />
-                    ) : (
-                      <Clock className="h-5 w-5" />
-                    )}
-                  </div>
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </button>
 
-                  {/* Order Details */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold">{order.orderNumber}</p>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${getStatusColor(order.status)}`}
-                      >
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="mt-1 truncate text-sm text-muted-foreground">
-                      {order.items.map((i) => `${i.name} x${i.qty}`).join(", ")}
-                    </p>
-                    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        {formatOrderDate(order.createdAt)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {formatOrderTime(order.createdAt)}
-                      </span>
-                      <span className="rounded-md bg-muted px-2 py-0.5">{order.slot}</span>
-                    </div>
-                  </div>
-
-                  {/* Amount & Action */}
-                  <div className="text-right">
-                    <p className="text-lg font-bold">{formatINR(order.total)}</p>
-                    {canCancel(order) ? (
+                  <div className="flex gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
-                        onClick={() => setCancelingOrder(order)}
-                        className="mt-1 text-xs font-semibold text-destructive opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-8 w-8 rounded-lg text-sm font-medium transition-all ${
+                          currentPage === page
+                            ? "bg-primary text-white"
+                            : "border border-border hover:bg-muted"
+                        }`}
                       >
-                        Cancel
+                        {page}
                       </button>
-                    ) : order.status === "Cancelled" && order.cancellationReason ? (
-                      <p className="mt-1 max-w-36 truncate text-xs text-muted-foreground">
-                        {order.cancellationReason}
-                      </p>
-                    ) : (
-                      <button className="mt-1 flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                        View Details <ChevronRight className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                    ))}
                   </div>
+
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>

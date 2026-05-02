@@ -6,6 +6,7 @@ import {
   Wallet,
   Receipt,
   ChevronRight,
+  ChevronLeft,
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
@@ -19,15 +20,18 @@ function WalletPage() {
   const walletBalance = useStore((s) => s.walletBalance);
   const orders = useStore((s) => s.orders);
   const [mounted, setMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedTransaction, setExpandedTransaction] = useState<string | null>(null);
+
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const stats = getOrderStats();
-  const transactions = orders
+  const allTransactions = orders
     .filter((o) => o.status === "Delivered" || o.status === "Completed")
-    .slice(0, 6)
     .map((order) => ({
       id: order.id,
       date: new Date(order.createdAt),
@@ -35,7 +39,15 @@ function WalletPage() {
       amount: order.total,
       type: "debit" as const,
       category: order.slot,
+      items: order.items,
+      orderNumber: order.orderNumber,
     }));
+
+  const totalPages = Math.ceil(allTransactions.length / ITEMS_PER_PAGE);
+  const transactions = allTransactions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   const monthlySpending = Array.from({ length: 6 }, (_, i) => {
     const date = new Date();
@@ -60,7 +72,7 @@ function WalletPage() {
   const handleExport = () => {
     const rows = [
       ["Date", "Description", "Category", "Amount", "Type"],
-      ...transactions.map((t) => [
+      ...allTransactions.map((t) => [
         t.date.toLocaleDateString(),
         t.description,
         t.category,
@@ -142,7 +154,7 @@ function WalletPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6">
+        {/* <div className="rounded-2xl border border-border bg-card p-6">
           <div className="mb-6">
             <h3 className="font-bold">Spending Trends</h3>
             <p className="mt-0.5 text-sm text-muted-foreground">Last 6 months</p>
@@ -172,14 +184,15 @@ function WalletPage() {
               );
             })}
           </div>
-        </div>
+        </div> */}
 
         <div className="rounded-2xl border border-border bg-card">
           <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="font-bold">Recent Transactions</h3>
+              <h3 className="font-bold">Transactions</h3>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                {transactions.length} transactions
+                {allTransactions.length} total transactions
+                {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
               </p>
             </div>
             <div className="relative">
@@ -191,7 +204,7 @@ function WalletPage() {
             </div>
           </div>
 
-          {transactions.length === 0 ? (
+          {allTransactions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                 <Receipt className="h-8 w-8 text-muted-foreground" />
@@ -202,41 +215,158 @@ function WalletPage() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {transactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
-                    {transaction.type === "debit" ? (
-                      <ArrowUpRight className="h-5 w-5" />
-                    ) : (
-                      <ArrowDownRight className="h-5 w-5" />
+            <div>
+              <div className="divide-y divide-border">
+                {transactions.map((transaction) => (
+                  <div key={transaction.id} className="p-0">
+                    {/* Main Transaction Row */}
+                    <button
+                      onClick={() =>
+                        setExpandedTransaction(
+                          expandedTransaction === transaction.id ? null : transaction.id,
+                        )
+                      }
+                      className="w-full text-left transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-center gap-4 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
+                          {transaction.type === "debit" ? (
+                            <ArrowUpRight className="h-5 w-5" />
+                          ) : (
+                            <ArrowDownRight className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{transaction.description}</p>
+                          <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{formatDate(transaction.date)}</span>
+                            <span className="rounded-md bg-muted px-2 py-0.5">
+                              {transaction.category}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-destructive">
+                            -{formatINR(transaction.amount)}
+                          </span>
+                          <ChevronRight
+                            className={`h-4 w-4 text-muted-foreground transition-transform ${
+                              expandedTransaction === transaction.id ? "rotate-90" : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Expanded Details */}
+                    {expandedTransaction === transaction.id && (
+                      <div className="border-t border-border bg-muted/30 p-4">
+                        <div className="space-y-3">
+                          {/* Transaction ID */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Order Number</p>
+                              <p className="mt-1 font-mono text-sm font-medium">
+                                {transaction.orderNumber}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Type</p>
+                              <p className="mt-1 text-sm font-medium">
+                                {transaction.type === "debit" ? "Debit" : "Credit"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Date & Time */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Date</p>
+                              <p className="mt-1 text-sm font-medium">{formatDate(transaction.date)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Time</p>
+                              <p className="mt-1 text-sm font-medium">
+                                {transaction.date.toLocaleTimeString("en-US", {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Items List */}
+                          {transaction.items && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Items Purchased</p>
+                              <div className="mt-2 space-y-1">
+                                {transaction.items.map((item, i) => (
+                                  <p key={i} className="text-sm text-foreground">
+                                    • {item.name} <span className="text-muted-foreground">x{item.qty}</span> (
+                                    {formatINR(item.price * item.qty)})
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Amount Summary */}
+                          <div className="border-t border-border pt-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold">Total</span>
+                              <span className="text-lg font-bold text-destructive">
+                                -{formatINR(transaction.amount)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{transaction.description}</p>
-                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{formatDate(transaction.date)}</span>
-                      <span className="rounded-md bg-muted px-2 py-0.5">
-                        {transaction.category}
-                      </span>
-                    </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 border-t border-border p-4">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </button>
+
+                  <div className="flex gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`h-8 w-8 rounded-lg text-sm font-medium transition-all ${
+                          currentPage === page
+                            ? "bg-primary text-white"
+                            : "border border-border hover:bg-muted"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
                   </div>
-                  <span className="font-semibold text-destructive">
-                    -{formatINR(transaction.amount)}
-                  </span>
+
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           )}
-
-          <div className="border-t border-border p-4">
-            <button className="flex w-full items-center justify-center gap-2 text-sm font-medium text-primary hover:underline">
-              View All Transactions <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
         </div>
       </div>
     </AppLayout>

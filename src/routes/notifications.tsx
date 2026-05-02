@@ -39,6 +39,7 @@ function Notifications() {
   const [filter, setFilter] = useState<"all" | NotificationType>("all");
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [displayedCount, setDisplayedCount] = useState(8);
 
   useEffect(() => {
     setMounted(true);
@@ -70,7 +71,7 @@ function Notifications() {
     // Recent completed orders
     const recentCompleted = orders
       .filter((o) => o.status === "Completed" || o.status === "Delivered")
-      .slice(0, 2);
+      .slice(0, 5);
 
     recentCompleted.forEach((order, i) => {
       dynamicNotifications.push({
@@ -94,20 +95,36 @@ function Notifications() {
           : `Your current wallet balance is ${formatINR(walletBalance)}. You're all set for your next meal!`,
       time: new Date(Date.now() - 60 * 60000),
       read: walletBalance >= 500,
-      actionable: walletBalance < 500,
-      actionText: "View Wallet",
-      actionRoute: "/wallet",
+      actionable: false,
     });
 
-    // Promo notification
-    dynamicNotifications.push({
-      id: "promo-1",
-      type: "promo",
-      title: "Weekend Special Offer!",
-      body: "Get 20% off on all orders above ₹500 this weekend. Use code: WEEKEND20 at checkout. Valid until Sunday midnight.",
-      time: new Date(Date.now() - 5 * 60 * 60000),
-      read: true,
-    });
+    // Promo notifications
+    dynamicNotifications.push(
+      {
+        id: "promo-1",
+        type: "promo",
+        title: "Weekend Special Offer!",
+        body: "Get 20% off on all orders above ₹500 this weekend. Use code: WEEKEND20 at checkout. Valid until Sunday midnight.",
+        time: new Date(Date.now() - 5 * 60 * 60000),
+        read: true,
+      },
+      {
+        id: "promo-2",
+        type: "promo",
+        title: "Lunch Combo Bonanza",
+        body: "Special lunch combos available today! Get a main course + beverage at just ₹299. Offer valid 12:00 PM - 3:00 PM.",
+        time: new Date(Date.now() - 24 * 60 * 60000),
+        read: true,
+      },
+      {
+        id: "promo-3",
+        type: "promo",
+        title: "Your Favorite Item Back in Stock",
+        body: "The Paneer Tikka Biryani you loved is back! Limited quantities available. Order now to reserve yours.",
+        time: new Date(Date.now() - 48 * 60 * 60000),
+        read: true,
+      },
+    );
 
     setNotifications(dynamicNotifications.sort((a, b) => b.time.getTime() - a.time.getTime()));
   }, [orders, walletBalance, activeOrder]);
@@ -125,6 +142,11 @@ function Notifications() {
   const deleteNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     toast.success("Notification removed");
+  };
+
+  const loadMoreNotifications = () => {
+    setDisplayedCount((prev) => prev + 8);
+    toast.success("Older notifications loaded");
   };
 
   const getIcon = (type: NotificationType) => {
@@ -245,7 +267,7 @@ function Notifications() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredNotifications.map((notification, index) => {
+            {filteredNotifications.slice(0, displayedCount).map((notification, index) => {
               const Icon = getIcon(notification.type);
 
               return (
@@ -290,12 +312,6 @@ function Notifications() {
                             {notification.actionText}
                             <ChevronRight className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={() => deleteNotification(notification.id)}
-                            className="rounded-xl border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                          >
-                            Dismiss
-                          </button>
                         </div>
                       )}
                     </div>
@@ -315,9 +331,12 @@ function Notifications() {
         )}
 
         {/* Load More */}
-        {filteredNotifications.length > 0 && (
+        {filteredNotifications.length > displayedCount && (
           <div className="flex justify-center">
-            <button className="flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-medium transition-colors hover:bg-muted">
+            <button
+              onClick={loadMoreNotifications}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-medium transition-colors hover:bg-muted"
+            >
               Load Older Notifications
             </button>
           </div>

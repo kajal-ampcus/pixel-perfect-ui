@@ -320,7 +320,7 @@ function Dashboard() {
 
                   <button
                     disabled={isExpired}
-                    onClick={() => navigate({ to: "/menu" })}
+                    onClick={() => navigate({ to: "/menu", search: { slot: slot.name } })}
                     className={`mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${
                       isActive
                         ? "bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40"
@@ -338,7 +338,7 @@ function Dashboard() {
         </div>
 
         {/* Quick Menu Preview */}
-        {popularItems.length > 0 && (
+        {/* {popularItems.length > 0 && (
           <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold">Popular Right Now</h2>
@@ -392,10 +392,10 @@ function Dashboard() {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Recent Orders */}
-        {recentOrders.length > 0 && (
+        {/* {recentOrders.length > 0 && (
           <div className="rounded-2xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b border-border p-5">
               <h2 className="font-bold">Recent Orders</h2>
@@ -440,7 +440,7 @@ function Dashboard() {
               ))}
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </AppLayout>
   );
