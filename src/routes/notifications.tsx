@@ -144,6 +144,11 @@ function Notifications() {
     toast.success("Notification removed");
   };
 
+  const clearReadNotifications = () => {
+    setNotifications((prev) => prev.filter((n) => !n.read));
+    toast.success("Read notifications cleared");
+  };
+
   const loadMoreNotifications = () => {
     setDisplayedCount((prev) => prev + 8);
     toast.success("Older notifications loaded");
@@ -219,15 +224,26 @@ function Notifications() {
               Stay updated with your orders and promotions
             </p>
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-            >
-              <Check className="h-4 w-4" />
-              Mark all as read
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-4">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                <Check className="h-4 w-4" />
+                Mark all as read
+              </button>
+            )}
+            {notifications.some((n) => n.read) && (
+              <button
+                onClick={clearReadNotifications}
+                className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-destructive hover:underline transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear read
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filter Tabs */}

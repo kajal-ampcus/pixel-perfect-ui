@@ -5,8 +5,7 @@ import {
   Flame,
   LogOut,
   Search,
-  Settings,
-  HelpCircle,
+  Bell,
   Package,
   CheckCircle2,
   UtensilsCrossed,
@@ -65,8 +64,14 @@ export function KitchenLayout({ children, title }: { children: ReactNode; title:
             className="w-full rounded-md bg-input/60 py-1.5 pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
-        <Settings className="ml-auto h-4 w-4 text-muted-foreground" />
-        <HelpCircle className="hidden h-4 w-4 text-muted-foreground sm:block" />
+        <button
+          onClick={() => navigate({ to: "/kitchen-notifications" })}
+          className="ml-auto relative rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Notifications"
+        >
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-1 top-1 flex h-2 w-2 items-center justify-center rounded-full bg-destructive"></span>
+        </button>
         <ThemeToggle />
         <span className="rounded bg-emerald-600/20 px-2 py-1 text-[10px] font-bold text-emerald-400">
           {user?.name ?? "Chef"}
@@ -89,18 +94,25 @@ function Kitchen() {
   const allOrders = useStore((s) => s.orders);
   const user = typeof window !== "undefined" ? getCurrentUser() : null;
   const [now, setNow] = useState(new Date());
+  const [selectedSlot, setSelectedSlot] = useState<string>("All");
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
 
+  const availableSlots = useMemo(
+    () => Array.from(new Set(allOrders.map((o) => o.slot))),
+    [allOrders]
+  );
+
   const orders = useMemo(
     () =>
       allOrders
         .filter((order) => ["Pending", "Preparing", "Ready"].includes(order.status))
+        .filter((order) => selectedSlot === "All" || order.slot === selectedSlot)
         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
-    [allOrders],
+    [allOrders, selectedSlot],
   );
 
   if (user?.role && user.role !== "kitchen") {
@@ -138,7 +150,19 @@ function Kitchen() {
               Auto-refreshing from employee orders and cancellations
             </div>
           </div>
-          <div className="flex gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <select
+              value={selectedSlot}
+              onChange={(e) => setSelectedSlot(e.target.value)}
+              className="rounded-md border border-border bg-muted/50 px-3 py-1 outline-none focus:ring-1 focus:ring-primary font-medium"
+            >
+              <option value="All">All Slots</option>
+              {availableSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
             <span className="rounded-md bg-primary/15 px-3 py-1 font-semibold text-primary">
               {orders.length} ACTIVE
             </span>

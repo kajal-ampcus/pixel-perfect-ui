@@ -2,14 +2,49 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { KitchenLayout } from "./kitchen";
 import { downloadCSV, formatINR, useStore } from "@/lib/store";
+import { useState, useMemo } from "react";
 
 export const Route = createFileRoute("/kitchen-history")({ component: KitchenHistory });
 
 function KitchenHistory() {
   const orders = useStore((s) => s.orders);
-  const rows = orders.filter((order) =>
-    ["Delivered", "Completed", "Cancelled"].includes(order.status),
+  
+  const [dateFilter, setDateFilter] = useState<"all" | "24h" | "custom">("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [slotFilter, setSlotFilter] = useState("All");
+
+  const availableSlots = useMemo(
+    () => Array.from(new Set(orders.map((o) => o.slot))),
+    [orders]
   );
+
+  const rows = useMemo(() => {
+    let filtered = orders.filter((order) =>
+      ["Delivered", "Completed", "Cancelled"].includes(order.status),
+    );
+
+    if (slotFilter !== "All") {
+      filtered = filtered.filter((order) => order.slot === slotFilter);
+    }
+
+    if (dateFilter === "24h") {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      filtered = filtered.filter((order) => new Date(order.createdAt) >= yesterday);
+    } else if (dateFilter === "custom" && startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((order) => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= start && orderDate <= end;
+      });
+    }
+
+    // Sort by most recent first
+    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [orders, slotFilter, dateFilter, startDate, endDate]);
 
   const handleExport = () => {
     downloadCSV("kitchen-history.csv", [
@@ -29,29 +64,61 @@ function KitchenHistory() {
   return (
     <KitchenLayout title="Order History">
       <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
-        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end">
-          <div className="flex-1">
+        <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end flex-wrap">
+          <div className="flex-1 min-w-[150px]">
             <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">DATE RANGE</div>
-            <select className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs">
-              <option>All Orders</option>
-              <option>Last 24 Hours</option>
-              <option>Last 7 Days</option>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value as any)}
+              className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">All Orders</option>
+              <option value="24h">Last 24 Hours</option>
+              <option value="custom">Custom Date Range</option>
             </select>
           </div>
-          <div className="flex-1">
+
+          {dateFilter === "custom" && (
+            <div className="flex flex-1 items-end gap-2 min-w-[250px]">
+              <div className="flex-1">
+                <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">FROM</div>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div className="flex-1">
+                <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">TO</div>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 min-w-[150px]">
             <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">SLOT</div>
-            <select className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs">
-              <option>All Slots</option>
-              <option>Snacks</option>
-              <option>Dinner</option>
-              <option>Late Night Snacks</option>
+            <select
+              value={slotFilter}
+              onChange={(e) => setSlotFilter(e.target.value)}
+              className="w-full rounded-md bg-input/60 px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="All">All Slots</option>
+              {availableSlots.map(slot => (
+                <option key={slot} value={slot}>{slot}</option>
+              ))}
             </select>
           </div>
           <div>
             <div className="mb-1 text-[10px] tracking-widest text-muted-foreground">EXPORT</div>
             <button
               onClick={handleExport}
-              className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+              className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <Download className="h-3 w-3" /> CSV
             </button>

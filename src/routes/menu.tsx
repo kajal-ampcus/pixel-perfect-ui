@@ -175,16 +175,33 @@ function Menu() {
             )}
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-xs flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search dishes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
+          {/* Actions: Search & Cart */}
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            {/* Search */}
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search dishes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            {/* Inline Cart Button */}
+            {cart.length > 0 && (
+              <button
+                onClick={() => navigate({ to: "/cart" })}
+                className="relative flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:scale-105 hover:shadow-primary/40 animate-in fade-in zoom-in-95 duration-300"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">View Cart</span>
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-white shadow-sm">
+                  {cart.reduce((sum, item) => sum + item.qty, 0)}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -200,15 +217,14 @@ function Menu() {
                 key={slot.id}
                 disabled={isExpired}
                 onClick={() => setSelectedSlot(selectedSlot === slot.name ? "All" : slot.name)}
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-                  selectedSlot === slot.name
-                    ? "bg-primary text-white shadow-lg shadow-primary/30"
-                    : isActive
-                      ? "border-2 border-primary bg-primary/10 text-primary"
-                      : isExpired
-                        ? "cursor-not-allowed border border-border bg-muted/40 text-muted-foreground opacity-60"
-                        : "border border-border bg-card text-foreground hover:border-primary/50"
-                }`}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${selectedSlot === slot.name
+                  ? "bg-primary text-white shadow-lg shadow-primary/30"
+                  : isActive
+                    ? "border-2 border-primary bg-primary/10 text-primary"
+                    : isExpired
+                      ? "cursor-not-allowed border border-border bg-muted/40 text-muted-foreground opacity-60"
+                      : "border border-border bg-card text-foreground hover:border-primary/50"
+                  }`}
               >
                 <SlotIcon className="h-4 w-4" />
                 <span>{slot.name}</span>
@@ -231,11 +247,10 @@ function Menu() {
             <button
               key={cat.value}
               onClick={() => setSelectedCategory(cat.value)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-                selectedCategory === cat.value
-                  ? "bg-primary text-white shadow-md"
-                  : "border border-border bg-card hover:bg-muted"
-              }`}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${selectedCategory === cat.value
+                ? "bg-primary text-white shadow-md"
+                : "border border-border bg-card hover:bg-muted"
+                }`}
             >
               <cat.icon className="h-4 w-4" />
               {cat.label}
@@ -366,11 +381,10 @@ function Menu() {
                           ) : (
                             <button
                               onClick={() => handleAddToCart(item)}
-                              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all ${
-                                isAdded
-                                  ? "bg-success text-white"
-                                  : "bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 btn-press"
-                              }`}
+                              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all ${isAdded
+                                ? "bg-success text-white"
+                                : "bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 btn-press"
+                                }`}
                             >
                               {isAdded ? (
                                 <>
@@ -395,45 +409,8 @@ function Menu() {
           ))
         )}
 
-        {cart.length > 0 && (
-          <div className="sticky bottom-24 z-20 rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-black/10">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <ShoppingCart className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold">Cart ready</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {cart.reduce((sum, item) => sum + item.qty, 0)} items added across slots
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate({ to: "/cart" })}
-                className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:shadow-primary/40"
-              >
-                View Cart
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Floating View Cart Button (top-right) */}
-        {cart.length > 0 && (
-          <div className="fixed top-20 right-6 z-30 animate-in fade-in slide-in-from-top-2 duration-300">
-            <button
-              onClick={() => navigate({ to: "/cart" })}
-              className="relative flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-primary/40 transition-all hover:shadow-primary/50 hover:scale-105"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Cart
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-white">
-                {cart.reduce((sum, item) => sum + item.qty, 0)}
-              </span>
-            </button>
-          </div>
-        )}
+
       </div>
     </AppLayout>
   );

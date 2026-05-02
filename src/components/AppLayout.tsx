@@ -7,7 +7,6 @@ import {
   UtensilsCrossed,
   LogOut,
   Search,
-  Settings,
   ShoppingCart,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -81,7 +80,10 @@ export function AppLayout({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <button className="relative rounded-xl p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <button 
+              onClick={() => navigate({ to: "/notifications" })}
+              className="relative rounded-xl p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">3</span>
             </button>
@@ -99,10 +101,6 @@ export function AppLayout({
             </button>
 
             <ThemeToggle />
-
-            <button className="rounded-xl p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-              <Settings className="h-5 w-5" />
-            </button>
           </div>
 
           {/* User */}

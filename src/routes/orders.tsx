@@ -264,29 +264,26 @@ function Orders() {
                   <div key={step.label} className="flex flex-1 items-center">
                     <div className="flex flex-col items-center gap-2">
                       <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-500 ${
-                          step.current
+                        className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-500 ${step.current
                             ? "bg-primary text-white ring-4 ring-primary/20 scale-110 shadow-lg shadow-primary/30"
                             : step.done
                               ? "bg-primary text-white"
                               : "bg-muted text-muted-foreground"
-                        }`}
+                          }`}
                       >
                         <StepIcon className={`h-5 w-5 ${step.current ? "animate-pulse" : ""}`} />
                       </div>
                       <span
-                        className={`text-xs font-medium ${
-                          step.current ? "text-primary font-semibold" : "text-muted-foreground"
-                        }`}
+                        className={`text-xs font-medium ${step.current ? "text-primary font-semibold" : "text-muted-foreground"
+                          }`}
                       >
                         {step.label}
                       </span>
                     </div>
                     {i < arr.length - 1 && (
                       <div
-                        className={`mx-2 h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                          step.done ? "bg-primary" : "bg-muted"
-                        }`}
+                        className={`mx-2 h-1.5 flex-1 rounded-full transition-all duration-500 ${step.done ? "bg-primary" : "bg-muted"
+                          }`}
                       />
                     )}
                   </div>
@@ -331,11 +328,10 @@ function Orders() {
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-                  filter === f.value
+                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${filter === f.value
                     ? "bg-primary text-white shadow-lg shadow-primary/30"
                     : "border border-border bg-card hover:bg-muted"
-                }`}
+                  }`}
               >
                 {f.label}
               </button>
@@ -347,19 +343,18 @@ function Orders() {
             <span className="text-sm font-medium text-muted-foreground">Filter by date:</span>
             <div className="flex flex-wrap gap-2">
               {[
-                { value: "all" as const, label: "All Time" },
+                // { value: "all" as const, label: "All Time" },
                 { value: "today" as const, label: "Today" },
-                { value: "week" as const, label: "Last 7 Days" },
+                // { value: "week" as const, label: "Last 7 Days" },
                 { value: "custom" as const, label: "Custom" },
               ].map((d) => (
                 <button
                   key={d.value}
                   onClick={() => setDateFilter(d.value)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                    dateFilter === d.value
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${dateFilter === d.value
                       ? "bg-primary text-white"
                       : "border border-border bg-card hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   {d.label}
                 </button>
@@ -431,13 +426,12 @@ function Orders() {
                       <div className="flex items-center gap-4 p-5">
                         {/* Order Icon */}
                         <div
-                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                            order.status === "Cancelled"
+                          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${order.status === "Cancelled"
                               ? "bg-destructive/15 text-destructive"
                               : ["Completed", "Delivered"].includes(order.status)
                                 ? "bg-success/15 text-success"
                                 : "bg-primary/15 text-primary"
-                          }`}
+                            }`}
                         >
                           {order.status === "Cancelled" ? (
                             <XCircle className="h-5 w-5" />
@@ -479,9 +473,8 @@ function Orders() {
                           <p className="text-lg font-bold">{formatINR(order.total)}</p>
                           <div className="mt-2 flex items-center justify-center">
                             <ChevronRight
-                              className={`h-4 w-4 text-muted-foreground transition-transform ${
-                                expandedOrder === order.id ? "rotate-90" : ""
-                              }`}
+                              className={`h-4 w-4 text-muted-foreground transition-transform ${expandedOrder === order.id ? "rotate-90" : ""
+                                }`}
                             />
                           </div>
                         </div>
@@ -579,11 +572,10 @@ function Orders() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`h-8 w-8 rounded-lg text-sm font-medium transition-all ${
-                          currentPage === page
+                        className={`h-8 w-8 rounded-lg text-sm font-medium transition-all ${currentPage === page
                             ? "bg-primary text-white"
                             : "border border-border hover:bg-muted"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>
